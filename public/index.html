@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCJ28 - Academic & Startup Task Manager</title>
+  <link rel="icon" type="image/png" href="SCJ28-square.png">
+  <link rel="apple-touch-icon" href="SCJ28-square.png">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dark-theme">
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <img src="SCJ28-square.png" alt="SCJ28 Logo" class="app-logo">
+          <div class="logo-text">
+            <span class="brand-title">SCJ28</span>
+            <span class="brand-subtitle">Task System</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Quick Views -->
+        <div class="nav-section">
+          <div class="section-label">Smart Filters</div>
+          <ul class="nav-list">
+            <li class="nav-item active" data-filter="all">
+              <i data-lucide="layers"></i>
+              <span>All Tasks</span>
+              <span class="badge" id="cnt-all">0</span>
+            </li>
+            <li class="nav-item" data-filter="today">
+              <i data-lucide="sun"></i>
+              <span>Due Today</span>
+              <span class="badge badge-accent" id="cnt-today">0</span>
+            </li>
+            <li class="nav-item" data-filter="upcoming">
+              <i data-lucide="calendar-clock"></i>
+              <span>Next 7 Days</span>
+              <span class="badge" id="cnt-upcoming">0</span>
+            </li>
+            <li class="nav-item" data-filter="overdue">
+              <i data-lucide="alert-circle"></i>
+              <span>Overdue</span>
+              <span class="badge badge-danger" id="cnt-overdue">0</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Categories & Projects -->
+        <div class="nav-section">
+          <div class="section-header">
+            <span class="section-label">Categories & Projects</span>
+            <button class="icon-btn-sm" id="btn-add-category" title="Add Category">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          
+          <div id="categories-tree" class="categories-tree">
+            <!-- Dynamic Category Tree -->
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-primary btn-block" id="btn-new-task-sidebar">
+          <i data-lucide="plus"></i>
+          <span>New Task</span>
+        </button>
+        <input type="file" id="input-import-file" accept=".json" style="display: none;">
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation Header -->
+      <header class="top-bar">
+        <div class="header-left">
+          <button class="mobile-toggle" id="btn-mobile-toggle">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="page-title-group">
+            <h1 id="current-view-title">All Tasks</h1>
+            <span id="current-view-subtitle" class="view-subtitle">Overview of all active tasks</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Search Box -->
+          <div class="search-box">
+            <input type="text" id="input-search" placeholder="Search tasks, descriptions..." autocomplete="off">
+            <i data-lucide="search" class="search-icon"></i>
+          </div>
+
+          <!-- View Mode Toggles -->
+          <div class="view-toggle">
+            <button class="toggle-btn active" data-view="list" title="List View">
+              <i data-lucide="list"></i>
+            </button>
+            <button class="toggle-btn" data-view="kanban" title="Kanban Board View">
+              <i data-lucide="kanban"></i>
+            </button>
+            <button class="toggle-btn" data-view="calendar" title="Calendar View">
+              <i data-lucide="calendar"></i>
+            </button>
+          </div>
+
+          <!-- Notification Bell -->
+          <button class="btn btn-secondary icon-btn-sm" id="btn-notifications" title="Browser Desktop Notifications">
+            <i data-lucide="bell"></i>
+          </button>
+
+          <!-- Data Backup & Sync Menu Button -->
+          <button class="btn btn-secondary icon-btn-sm" id="btn-data-menu" title="Data Backup (Import / Export JSON)">
+            <i data-lucide="database"></i>
+          </button>
+
+          <button class="btn btn-primary" id="btn-new-task-header">
+            <i data-lucide="plus"></i>
+            <span class="hide-mobile">Add Task</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Overview Bar -->
+      <section class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-icon icon-total"><i data-lucide="check-square"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Total Tasks</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-pending"><i data-lucide="clock"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-pending">0</span>
+            <span class="stat-label">In Progress</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-overdue"><i data-lucide="alert-triangle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-overdue">0</span>
+            <span class="stat-label">Overdue</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-completed"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-completed">0</span>
+            <span class="stat-label">Completed</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- View Containers -->
+      <div class="view-content">
+        <!-- Desktop Notification Prompt Banner -->
+        <div id="notification-banner" class="notification-banner" style="display: none;">
+          <div class="banner-text">
+            <i data-lucide="bell-ring"></i>
+            <span>Enable browser desktop notifications to get instant alerts for due and overdue tasks.</span>
+          </div>
+          <div class="banner-actions">
+            <button class="btn btn-primary btn-sm" id="btn-enable-notifications">Enable Notifications</button>
+            <button class="btn btn-secondary btn-sm" id="btn-dismiss-notifications">Dismiss</button>
+          </div>
+        </div>
+
+        <!-- 1. List View -->
+        <div id="view-list" class="view-pane active">
+          <div class="view-filters-bar">
+            <div class="filter-group">
+              <label>Status:</label>
+              <select id="filter-status">
+                <option value="">All Statuses</option>
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Completed</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Priority:</label>
+              <select id="filter-priority">
+                <option value="">All Priorities</option>
+                <option value="1">P1 - Urgent</option>
+                <option value="2">P2 - High</option>
+                <option value="3">P3 - Medium</option>
+                <option value="4">P4 - Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="tasks-list-container" class="tasks-list">
+            <!-- Dynamic Tasks Rendered Here -->
+          </div>
+        </div>
+
+        <!-- 2. Kanban Board View -->
+        <div id="view-kanban" class="view-pane">
+          <div class="kanban-board">
+            <!-- Column: To Do -->
+            <div class="kanban-column" data-status="todo">
+              <div class="kanban-header">
+                <span class="kanban-title"><i data-lucide="circle"></i> To Do</span>
+                <span class="kanban-count" id="kb-count-todo">0</span>
+              </div>
+              <div class="kanban-cards" id="kb-cards-todo"></div>
+            </div>
+
+            <!-- Column: In Progress -->
+            <div class="kanban-column" data-status="in_progress">
+              <div class="kanban-header">
+                <span class="kanban-title"><i data-lucide="play-circle"></i> In Progress</span>
+                <span class="kanban-count" id="kb-count-in-progress">0</span>
+              </div>
+              <div class="kanban-cards" id="kb-cards-in-progress"></div>
+            </div>
+
+            <!-- Column: Done -->
+            <div class="kanban-column" data-status="done">
+              <div class="kanban-header">
+                <span class="kanban-title"><i data-lucide="check-circle-2"></i> Completed</span>
+                <span class="kanban-count" id="kb-count-done">0</span>
+              </div>
+              <div class="kanban-cards" id="kb-cards-done"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Calendar View -->
+        <div id="view-calendar" class="view-pane">
+          <div class="calendar-controls">
+            <button class="btn btn-secondary btn-sm" id="cal-prev"><i data-lucide="chevron-left"></i></button>
+            <h2 id="cal-month-year">September 2026</h2>
+            <button class="btn btn-secondary btn-sm" id="cal-next"><i data-lucide="chevron-right"></i></button>
+            <button class="btn btn-secondary btn-sm" id="cal-today">Today</button>
+          </div>
+          <div class="calendar-grid-header">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          </div>
+          <div class="calendar-grid" id="calendar-days">
+            <!-- Dynamic Days -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Task Modal (Create & Edit) -->
+  <div class="modal" id="modal-task">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-task-title">Create New Task</h3>
+        <button class="modal-close" data-close="modal-task"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-task">
+        <input type="hidden" id="task-id">
+        <div class="form-group">
+          <label for="task-title">Task Title *</label>
+          <input type="text" id="task-title" required placeholder="e.g. Graph Algorithms Assignment 3">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-project">Project / Class *</label>
+            <select id="task-project" required>
+              <!-- Dynamic options -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="task-priority">Importance Level *</label>
+            <select id="task-priority">
+              <option value="1">P1 - Urgent (Red)</option>
+              <option value="2">P2 - High (Dark Red)</option>
+              <option value="3" selected>P3 - Medium (Default)</option>
+              <option value="4">P4 - Low (Muted)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-due-date">Due Date & Time</label>
+            <input type="datetime-local" id="task-due-date">
+          </div>
+          <div class="form-group">
+            <label for="task-status">Status</label>
+            <select id="task-status">
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="task-reminder">Notification Reminder Frequency</label>
+          <select id="task-reminder">
+            <option value="smart" selected>⚡ Smart Priority (P1 Urgent: 4x/day, P2 High: 2x/day, P3 Medium: 1x/day)</option>
+            <option value="hourly">🔔 Hourly (Every 1 hour)</option>
+            <option value="every_3h">⏳ Every 3 Hours (4x per day)</option>
+            <option value="twice_daily">📅 Twice Daily (Every 12 hours)</option>
+            <option value="daily">🌅 Daily (Once per day)</option>
+            <option value="due_only">🎯 At Due Time Only</option>
+            <option value="none">🚫 Disabled (No Alerts)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="task-desc">Description / Notes</label>
+          <textarea id="task-desc" rows="3" placeholder="Enter instructions, requirements, or links..."></textarea>
+        </div>
+
+        <!-- Interactive Subtasks Checklist Builder -->
+        <div class="form-group">
+          <div class="subtasks-header">
+            <label>Subtask Checklist</label>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-subtask-row">
+              <i data-lucide="plus"></i> Add Item
+            </button>
+          </div>
+          <div id="subtasks-editor-list" class="subtasks-editor-list">
+            <!-- Dynamic subtask inputs -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-task">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-task">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Project Modal -->
+  <div class="modal" id="modal-project">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-project-title">Add New Project / Class</h3>
+        <button class="modal-close" data-close="modal-project"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-project">
+        <input type="hidden" id="project-category-id">
+        <div class="form-group">
+          <label for="project-name">Project / Class Name *</label>
+          <input type="text" id="project-name" required placeholder="e.g. Physics III, Startup Gamma">
+        </div>
+        <div class="form-group">
+          <label for="project-desc">Description</label>
+          <input type="text" id="project-desc" placeholder="Course code or short context">
+        </div>
+        <div class="form-group">
+          <label for="project-color">Accent Color</label>
+          <input type="color" id="project-color" value="#ff3333">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-project">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal" id="modal-category">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add Category</h3>
+        <button class="modal-close" data-close="modal-category"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-category">
+        <div class="form-group">
+          <label for="category-name">Category Name *</label>
+          <input type="text" id="category-name" required placeholder="e.g. Side Projects, Master's Degree">
+        </div>
+        <div class="form-group">
+          <label for="category-icon">Icon</label>
+          <select id="category-icon">
+            <option value="folder">Folder</option>
+            <option value="graduation-cap">Academic Cap</option>
+            <option value="briefcase">Briefcase / Work</option>
+            <option value="user">Personal</option>
+            <option value="rocket">Startup / Rocket</option>
+            <option value="code">Code</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-category">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Data Management Options Modal -->
+  <div class="modal" id="modal-data-options">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Data Backup & Options</h3>
+        <button class="modal-close" data-close="modal-data-options"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.88rem; line-height: 1.4;">
+          Manage your task manager data. Export a full JSON backup of your database or restore/merge data from an existing backup file.
+        </p>
+        <div class="data-options-grid">
+          <div class="data-option-card">
+            <div class="option-icon"><i data-lucide="download"></i></div>
+            <div class="option-info">
+              <h4>Export Database</h4>
+              <p>Download all categories, projects, tasks, and subtasks into a .json file.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-modal-export">Export JSON</button>
+          </div>
+
+          <div class="data-option-card">
+            <div class="option-icon"><i data-lucide="upload"></i></div>
+            <div class="option-info">
+              <h4>Import Database</h4>
+              <p>Restore or merge your database from a previously exported .json file.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-modal-import">Import JSON</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-data-options">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Data Modal -->
+  <div class="modal" id="modal-import">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Import Database (JSON)</h3>
+        <button class="modal-close" data-close="modal-import"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <p style="margin-bottom: 12px; color: var(--text-main);">Select how you want to import data from <strong id="import-filename">backup.json</strong>:</p>
+        <div id="import-summary" style="font-size: 0.85rem; color: var(--text-muted); background: #111; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+          <!-- Dynamic summary -->
+        </div>
+        <div class="form-group">
+          <label style="font-weight: 600; color: var(--text-main);">Import Strategy:</label>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.9rem;">
+              <input type="radio" name="import-mode" value="replace" checked>
+              <span><strong>Replace All</strong> (Wipe current DB & restore full backup)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.9rem;">
+              <input type="radio" name="import-mode" value="merge">
+              <span><strong>Merge</strong> (Keep existing tasks & append backup)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-import">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-import">Confirm Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
