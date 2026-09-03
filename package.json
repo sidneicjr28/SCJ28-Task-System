@@ -1,0 +1,18 @@
+{
+  "name": "scj28",
+  "version": "1.0.0",
+  "description": "SCJ28 Academic & Startup Task Manager",
+  "author": "Sidnei Correia Junior",
+  "license": "MIT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
