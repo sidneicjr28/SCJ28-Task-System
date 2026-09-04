@@ -1,5 +1,5 @@
 // SCJ28 Progressive Web App - Service Worker
-const CACHE_NAME = 'scj28-v0.1';
+const CACHE_NAME = 'scj28-v0.2';
 
 const STATIC_ASSETS = [
   './',
@@ -56,8 +56,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // API handling strategy: Network First
-  if (url.pathname.startsWith('/api/')) {
+  // API & Background Image handling strategy: Network First
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/bkg-image/')) {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {

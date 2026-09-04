@@ -3,7 +3,7 @@
 ## Project Overview
 SCJ28 is a lightweight, modern, minimalist task management web application designed for organizing academic course workloads (around 6 main classes), personal goals, and startup/work projects.
 
-The application features a sleek dark-mode user interface, hierarchical task organization, interactive subtask checklists, 4-tier priority levels, multi-view layout modes (List, Kanban Board, Calendar), smart due date filtering, HTML5 Web Desktop Notifications for due and overdue tasks, and full **Progressive Web App (PWA)** capabilities including offline caching, standalone app installation, and network status notifications.
+The application features a sleek dark-mode user interface, hierarchical task organization, interactive subtask checklists, 4-tier priority levels, multi-view layout modes (List, Kanban Board, Calendar), smart due date filtering, custom background image uploads, global dark opacity controls (60% to 100%), split-screen desktop responsiveness, HTML5 Web Desktop Notifications for due and overdue tasks, and full **Progressive Web App (PWA)** capabilities including offline caching, standalone app installation, and network status notifications.
 
 ---
 
@@ -11,14 +11,15 @@ The application features a sleek dark-mode user interface, hierarchical task org
 
 - **Backend**: Node.js + Express.js REST API (`server.js`)
 - **Database**: SQLite3 via `better-sqlite3` (`database.js` creating `tasks.db`)
+- **Storage**: `./bkg-image` subfolder for uploaded wallpaper background images
 - **Frontend**: Vanilla HTML5, CSS3, and ES6 JavaScript (`public/`)
 - **PWA Capabilities**: Web App Manifest (`manifest.json`), Service Worker (`sw.js`), offline shell caching, install prompt lifecycle (`pwaService.js`)
 - **Icons**: Lucide Icons library (`https://unpkg.com/lucide@latest`)
-- **Design System**: Minimalist Dark Mode Palette
-  - **Background**: `#0a0a0a` (Pure Black)
-  - **Sidebar**: `#111111`
-  - **Cards & Surfaces**: `#161616` / `#1c1c1c`
-  - **Accent Color**: `#ff3333` (Vibrant Red)
+- **Design System**: Minimalist Dark Mode Palette & Glassmorphic Translucency
+  - **Background**: Custom uploaded wallpaper or `#0a0a0a` (Pure Black)
+  - **Sidebar & Panels**: Glassmorphic blurred surfaces with customizable dark opacity (`--panel-opacity`)
+  - **Cards & Elements**: 2% relative dark overlay (`--item-opacity`) for sleek glass transparency
+  - **Accent Color**: `#ff3333` (Vibrant Red, customizable)
   - **Typography**: `#f5f5f5` (Clean White) & `#888888` (Muted Gray)
 
 ---
@@ -70,9 +71,14 @@ SCJ28/
 ├── database.js          # SQLite connection, schema definition & default seed data
 ├── tasks.db             # Local SQLite database file (auto-generated)
 ├── SCJ28-square.png     # Application logo
+├── bkg-image/           # Uploaded background image storage folder
+├── src/                 # Backend REST Controllers & Services
+│   ├── controllers/     # Task, Category, Project, Background & Settings controllers
+│   ├── services/        # Business logic & image storage management
+│   └── routes/          # Express route bindings (/api/tasks, /api/background, etc.)
 └── public/
     ├── index.html       # Single-page application markup & modals
-    ├── styles.css       # Black/White/Red minimalist dark theme CSS
+    ├── styles.css       # Black/White/Red minimalist glassmorphic CSS
     ├── manifest.json    # PWA Web App Manifest configuration
     ├── sw.js            # Service Worker for offline asset & API caching
     ├── SCJ28-square.png # Static logo asset
@@ -102,13 +108,11 @@ SCJ28/
 
 ## Development & Execution Rules
 
-## Development & Execution Rules
-
 1. **Server Execution**:
    - Quick launch script (Linux/macOS): `./run.sh` (starts server on port 2800 and opens browser automatically)
    - Quick launch script (Windows): `run.bat` or `run.cmd`
    - Direct node command: `node server.js`
-   - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.1)
+   - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.2)
 
 2. **API Conventions**:
    - All REST API routes are prefixed with `/api/`.
@@ -116,6 +120,7 @@ SCJ28/
    - `POST / PUT / DELETE /api/categories` - Full CRUD for categories.
    - `POST / PUT / DELETE /api/projects` - Full CRUD for projects under categories.
    - `GET /api/settings` & `PUT /api/settings` - Fetches and saves website accent color theme in `settings.json`.
+   - `GET /api/background`, `POST /api/background`, `DELETE /api/background` - Background wallpaper upload, retrieval, and removal (`bkg-image/`).
    - `GET /api/tasks` - Supports query parameters: `category_id`, `project_id`, `status`, `filter` (`today`, `upcoming`, `overdue`), `search`.
    - `POST / PUT / DELETE /api/tasks` - Full CRUD with nested `subtasks` array.
    - `PATCH /api/subtasks/:id/toggle` - Checkmark toggle handler.
@@ -128,7 +133,11 @@ SCJ28/
    - Automatic online/offline status notifications via toast UI.
 
 4. **Design & UX Guidelines**:
-   - Maintain the sharp black/white/red color scheme.
+   - Maintain the sharp black/white/red color scheme with glassmorphic backdrop blurring.
+   - Global panel opacity slider (60%–100%) saved in `localStorage` (`scj28_panel_opacity`).
+   - Inner cards and divs remain transparent with a 2% relative dark overlay.
+   - Background images are stored in `./bkg-image/` and excluded from `tasks.db` and JSON backup exports.
+   - Theme customization modal features a scrollable `75vh` height and responsive half-desktop split-screen layout support.
    - Ensure form input icons have `z-index: 2`, `pointer-events: none`, and proper left padding on the input text box (`padding-left: 38px`).
    - Keep code dependency-light: pure HTML5, vanilla CSS, and standard ES6 JavaScript.
 

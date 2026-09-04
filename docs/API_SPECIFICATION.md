@@ -17,6 +17,9 @@ All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. A
 | `DELETE` | `/api/projects/:id` | Deletes a project and its nested tasks | None |
 | `GET` | `/api/settings` | Returns app configuration & accent color from `settings.json` | None |
 | `PUT` | `/api/settings` | Updates app configuration & accent color in `settings.json` | None |
+| `GET` | `/api/background` | Returns uploaded background wallpaper URL | None |
+| `POST` | `/api/background` | Uploads a new background image (base64 image payload saved to `bkg-image/`) | None |
+| `DELETE` | `/api/background` | Removes the current background image | None |
 | `GET` | `/api/tasks` | Returns tasks list matching criteria | `category_id`, `project_id`, `status`, `filter`, `search` |
 | `POST` | `/api/tasks` | Creates a new task with optional subtasks | None |
 | `PUT` | `/api/tasks/:id` | Replaces/updates an existing task | None |
@@ -153,7 +156,48 @@ All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. A
 
 ---
 
-### 3. Backup, Import & Export
+### 3. Background Wallpaper Image Management
+
+#### `GET /api/background`
+- **Description**: Returns the active custom background image URL if set.
+- **Status Code**: `200 OK`
+- **Response Example**:
+```json
+{
+  "imageUrl": "/bkg-image/bg_1788500240185.jpg"
+}
+```
+
+#### `POST /api/background`
+- **Description**: Uploads a base64 encoded background image file and saves it in the `./bkg-image/` subfolder.
+- **Request Body**:
+```json
+{
+  "image": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+}
+```
+- **Status Code**: `200 OK`
+- **Response Example**:
+```json
+{
+  "success": true,
+  "imageUrl": "/bkg-image/bg_1788500240185.jpg"
+}
+```
+
+#### `DELETE /api/background`
+- **Description**: Deletes the custom background image file from `./bkg-image/` folder.
+- **Status Code**: `200 OK`
+- **Response Example**:
+```json
+{
+  "success": true
+}
+```
+
+---
+
+### 4. Backup, Import & Export
 
 #### `GET /api/export`
 - **Description**: Exports the full SQLite database content into JSON format. Sets `Content-Disposition` attachment header for automated browser downloading.
