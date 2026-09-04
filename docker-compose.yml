@@ -11,6 +11,7 @@ services:
       - "${PORT:-2800}:2800"
     volumes:
       - ./tasks.db:/app/tasks.db
+      - ./bkg-image:/app/bkg-image
     restart: unless-stopped
     environment:
       - NODE_ENV=production

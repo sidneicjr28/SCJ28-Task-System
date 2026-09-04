@@ -7,6 +7,7 @@ const taskController = require('../controllers/TaskController');
 const backupController = require('../controllers/BackupController');
 const statsController = require('../controllers/StatsController');
 const settingsController = require('../controllers/SettingsController');
+const backgroundController = require('../controllers/BackgroundController');
 
 // Categories & Projects
 router.get('/categories', (req, res) => categoryController.getCategories(req, res));
@@ -32,6 +33,11 @@ router.get('/stats', (req, res) => statsController.getStats(req, res));
 // Settings
 router.get('/settings', (req, res) => settingsController.getSettings(req, res));
 router.put('/settings', (req, res) => settingsController.updateSettings(req, res));
+
+// Background Image
+router.get('/background', (req, res) => backgroundController.getBackground(req, res));
+router.post('/background', (req, res) => backgroundController.uploadBackground(req, res));
+router.delete('/background', (req, res) => backgroundController.deleteBackground(req, res));
 
 // Import & Export
 router.get('/export', (req, res) => backupController.exportBackup(req, res));

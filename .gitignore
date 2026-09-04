@@ -41,3 +41,8 @@ exports/
 imports/
 tasks_*.json
 
+# User Uploaded Background Images
+bkg-image/*
+!bkg-image/.gitkeep
+
+

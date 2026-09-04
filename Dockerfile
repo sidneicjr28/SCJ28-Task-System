@@ -12,6 +12,7 @@ COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy app files
+ARG BUILDTIME=unknown
 COPY . .
 
 # Default environment variables
