@@ -3,7 +3,7 @@
 ## Project Overview
 SCJ28 is a lightweight, modern, minimalist task management web application designed for organizing academic course workloads (around 6 main classes), personal goals, and startup/work projects.
 
-The application features a sleek dark-mode user interface, hierarchical task organization, interactive subtask checklists, 4-tier priority levels, multi-view layout modes (List, Kanban Board, Calendar), smart due date filtering, and HTML5 Web Desktop Notifications for due and overdue tasks.
+The application features a sleek dark-mode user interface, hierarchical task organization, interactive subtask checklists, 4-tier priority levels, multi-view layout modes (List, Kanban Board, Calendar), smart due date filtering, HTML5 Web Desktop Notifications for due and overdue tasks, and full **Progressive Web App (PWA)** capabilities including offline caching, standalone app installation, and network status notifications.
 
 ---
 
@@ -12,6 +12,7 @@ The application features a sleek dark-mode user interface, hierarchical task org
 - **Backend**: Node.js + Express.js REST API (`server.js`)
 - **Database**: SQLite3 via `better-sqlite3` (`database.js` creating `tasks.db`)
 - **Frontend**: Vanilla HTML5, CSS3, and ES6 JavaScript (`public/`)
+- **PWA Capabilities**: Web App Manifest (`manifest.json`), Service Worker (`sw.js`), offline shell caching, install prompt lifecycle (`pwaService.js`)
 - **Icons**: Lucide Icons library (`https://unpkg.com/lucide@latest`)
 - **Design System**: Minimalist Dark Mode Palette
   - **Background**: `#0a0a0a` (Pure Black)
@@ -72,8 +73,29 @@ SCJ28/
 └── public/
     ├── index.html       # Single-page application markup & modals
     ├── styles.css       # Black/White/Red minimalist dark theme CSS
-    ├── app.js           # Client state, API handlers, view renderers
-    └── SCJ28-square.png # Static logo asset
+    ├── manifest.json    # PWA Web App Manifest configuration
+    ├── sw.js            # Service Worker for offline asset & API caching
+    ├── SCJ28-square.png # Static logo asset
+    ├── icons/           # High-resolution PWA icons (192x192, 512x512)
+    │   ├── icon-192x192.png
+    │   └── icon-512x512.png
+    └── js/
+        ├── app.js       # Client orchestrator entry point
+        ├── services/    # API, Notification & PWA Services
+        │   ├── apiService.js
+        │   ├── notificationService.js
+        │   └── pwaService.js
+        ├── state/       # Application state store
+        │   └── store.js
+        ├── ui/          # Toast & Modal UI managers
+        │   ├── modalManager.js
+        │   └── toast.js
+        └── renderers/   # Modular view renderers (List, Kanban, Calendar, Stats, Categories)
+            ├── calendarRenderer.js
+            ├── categoryRenderer.js
+            ├── kanbanRenderer.js
+            ├── listRenderer.js
+            └── statsRenderer.js
 ```
 
 ---
@@ -94,7 +116,13 @@ SCJ28/
    - `PATCH /api/subtasks/:id/toggle` - Checkmark toggle handler.
    - `GET /api/stats` - Total, pending, overdue, and due today counts.
 
-3. **Design & UX Guidelines**:
+3. **PWA & Offline Features**:
+   - Service worker pre-caches application shell assets on installation.
+   - API GET requests utilize network-first strategy with cache fallback for offline usage.
+   - PWA Install button automatically appears in top navigation when browser triggers `beforeinstallprompt`.
+   - Automatic online/offline status notifications via toast UI.
+
+4. **Design & UX Guidelines**:
    - Maintain the sharp black/white/red color scheme.
    - Ensure form input icons have `z-index: 2`, `pointer-events: none`, and proper left padding on the input text box (`padding-left: 38px`).
    - Keep code dependency-light: pure HTML5, vanilla CSS, and standard ES6 JavaScript.
