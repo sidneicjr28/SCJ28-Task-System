@@ -1,0 +1,30 @@
+{
+  "name": "SCJ28 - Academic & Startup Task Manager",
+  "short_name": "SCJ28",
+  "description": "Lightweight academic, personal, and startup task management web application",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "SCJ28-square.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    }
+  ]
+}
