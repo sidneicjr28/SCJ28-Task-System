@@ -49,6 +49,26 @@ function initDb() {
       position INTEGER DEFAULT 0,
       FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS diaries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER,
+      category_id INTEGER,
+      title TEXT NOT NULL,
+      content TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS diary_tasks (
+      diary_id INTEGER NOT NULL,
+      task_id INTEGER NOT NULL,
+      PRIMARY KEY (diary_id, task_id),
+      FOREIGN KEY (diary_id) REFERENCES diaries(id) ON DELETE CASCADE,
+      FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+    );
   `);
 
   // Migration: Ensure reminder_frequency column exists for existing databases

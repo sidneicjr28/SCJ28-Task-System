@@ -8,6 +8,7 @@ const backupController = require('../controllers/BackupController');
 const statsController = require('../controllers/StatsController');
 const settingsController = require('../controllers/SettingsController');
 const backgroundController = require('../controllers/BackgroundController');
+const diaryController = require('../controllers/DiaryController');
 
 // Categories & Projects
 router.get('/categories', (req, res) => categoryController.getCategories(req, res));
@@ -26,6 +27,14 @@ router.put('/tasks/:id', (req, res) => taskController.updateTask(req, res));
 router.patch('/tasks/:id/status', (req, res) => taskController.patchStatus(req, res));
 router.delete('/tasks/:id', (req, res) => taskController.deleteTask(req, res));
 router.patch('/subtasks/:id/toggle', (req, res) => taskController.toggleSubtask(req, res));
+
+// Diaries
+router.get('/diaries', (req, res) => diaryController.getDiaries(req, res));
+router.get('/diaries/:id', (req, res) => diaryController.getDiaryById(req, res));
+router.post('/diaries', (req, res) => diaryController.createDiary(req, res));
+router.put('/diaries/:id', (req, res) => diaryController.updateDiary(req, res));
+router.delete('/diaries/:id', (req, res) => diaryController.deleteDiary(req, res));
+router.post('/diaries/upload-image', (req, res) => diaryController.uploadImage(req, res));
 
 // Stats
 router.get('/stats', (req, res) => statsController.getStats(req, res));

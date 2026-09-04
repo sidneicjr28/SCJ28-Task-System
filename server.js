@@ -3,14 +3,22 @@ const cors = require('cors');
 const path = require('path');
 const apiRoutes = require('./src/routes/apiRoutes');
 
+const fs = require('fs');
+
 const app = express();
 const INITIAL_PORT = parseInt(process.env.PORT || '2800', 10);
+
+const diaryUploadDir = path.join(__dirname, 'uploads', 'diary-images');
+if (!fs.existsSync(diaryUploadDir)) {
+  fs.mkdirSync(diaryUploadDir, { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/bkg-image', express.static(path.join(__dirname, 'bkg-image')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Mount API Routes
 app.use('/api', apiRoutes);
