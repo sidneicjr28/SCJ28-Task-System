@@ -1,4 +1,4 @@
-# Use Case Specifications - SCJ28
+# Use Case Specifications - SCJ28 (v0.3.1)
 
 This document details the primary use cases for the SCJ28 Academic & Startup Task Manager.
 
@@ -14,14 +14,16 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
   |       | ---->|                                                 |
   |       | ---->|   (UC-02: Manage Multi-View & Kanban Drag-Drop) |
   |       |      |                                                 |
-  | User  | ---->|   (UC-03: Filter & Search Tasks)                |
+  | User  | ---->|   (UC-03: Filter & Search Tasks & Diaries)      |
   |       |      |                                                 |
   |       | ---->|   (UC-04: Backup & Restore Data via JSON)       |
   |       |      |                                                 |
   |       | ---->|   (UC-05: Manage Categories & Projects)        |
-  +-------+      |                                                 |
-                 |   (UC-06: Receive Desktop Task Alerts)          |
-                 +-------------------------------------------------+
+  |       |      |                                                 |
+  |       | ---->|   (UC-06: Manage Project & Class Diaries)       |
+  |       |      |                                                 |
+  |       | ---->|   (UC-07: Receive Desktop Task Alerts)          |
+  +-------+      +-------------------------------------------------+
 ```
 
 ---
@@ -47,10 +49,6 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
 9. Backend inserts task and subtasks into SQLite database inside `tasks.db`.
 10. System closes the modal, refreshes task views, updates dashboard counters, and displays a toast message ("Task created successfully!").
 
-### Alternative Flows
-- **A1: User cancels creation**: User clicks "Cancel" or the close icon (`X`). System closes the modal without persisting data.
-- **A2: Invalid input**: User submits without entering a required title or selecting a project. HTML5 validation blocks submission and highlights required fields.
-
 ---
 
 ## UC-02: Manage View Modes & Kanban Drag-and-Drop
@@ -67,88 +65,78 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
    - User drags a task card from one column and drops it onto another column.
    - System captures the `drop` event, extracts `taskId`, and calls `PATCH /api/tasks/:id/status`.
    - Backend updates task status in SQLite database.
-   - System re-renders Kanban counts and card positions.
 4. **If Calendar View selected**:
-   - System renders the current month's calendar grid.
-   - Tasks with due dates appear as interactive pills on their respective day cells.
-   - Clicking a task pill opens the Edit Task modal for that task.
+   - System renders the current month's calendar grid with task pills.
 
 ---
 
-## UC-03: Filter & Search Tasks
+## UC-03: Filter & Search Tasks & Diaries
 
 - **Primary Actor**: User
-- **Description**: User filters tasks by smart due date criteria, category/project hierarchy, status, or search query.
+- **Description**: User filters tasks and diaries by smart criteria, category/project hierarchy, status, or search query.
 
 ### Main Success Flow
-1. User clicks a smart filter item in the sidebar (`Due Today`, `Next 7 Days`, `Overdue`, or `All Tasks`).
-2. System updates `state.activeFilter` and fetches matching tasks from `GET /api/tasks?filter=<filter_type>`.
-3. Alternatively, user clicks a specific Category or Project item in the sidebar tree:
-   - System sets `state.activeCategory` or `state.activeProject`.
-   - System fetches filtered tasks via `GET /api/tasks?category_id=X` or `GET /api/tasks?project_id=Y`.
-4. Alternatively, user types text into the header search bar:
-   - System debounces input (250ms delay) and sends query via `GET /api/tasks?search=<query>`.
-5. System renders the filtered task list and updates summary counts.
+1. User clicks a smart filter item in the sidebar (`Due Today`, `Next 7 Days`, `Overdue`, `All Tasks`, or `All Diaries`).
+2. Alternatively, user clicks a specific Category or Project item in the sidebar tree:
+   - System displays top sub-tabs (`Tasks` | `Diaries`) for that category/project container.
+3. Alternatively, user types text into the search bar:
+   - System debounces input (250ms delay) and fetches matching records.
 
 ---
 
 ## UC-04: Backup & Restore Data via JSON
 
 - **Primary Actor**: User / System Administrator
-- **Description**: User opens the Data Backup options modal via the navbar database icon to export all database records into a single JSON file or import a JSON backup file.
+- **Description**: User opens the Data Backup options modal via the navbar database icon to export all database records (tasks, projects, categories, settings, diaries, and diary-task links) into a single JSON file or import a JSON backup file.
 
 ### Sub-Flow A: Exporting Data
 1. User clicks the Database icon (`#btn-data-menu`) in the top navigation bar.
 2. System opens the Data Backup Options modal (`#modal-data-options`).
 3. User clicks "Export JSON".
 4. System executes `GET /api/export`.
-5. Backend queries SQLite tables (`categories`, `projects`, `tasks`, `subtasks`) and constructs a JSON payload.
-6. Client receives payload and creates a blob download link.
-7. Browser saves `scj28_backup_YYYY-MM-DD.json` to user's local disk.
+5. Backend queries SQLite tables (`categories`, `projects`, `tasks`, `subtasks`, `diaries`, `diary_tasks`) and constructs a JSON payload.
+6. Client receives payload and triggers browser file download `SCJ28_Backup_YYYY-MM-DD.json`.
 
 ### Sub-Flow B: Importing Data
-1. User clicks the Database icon (`#btn-data-menu`) in the top navigation bar.
-2. System opens the Data Backup Options modal (`#modal-data-options`).
-3. User clicks "Import JSON".
-4. System opens browser file selector accepting `.json` files.
-3. User selects a valid SCJ28 backup JSON file.
-4. Client reads file via HTML5 `FileReader` and parses JSON data.
-5. System displays `#modal-import` modal showing summary breakdown of categories, projects, tasks, and subtasks found in the file.
-6. User selects import strategy:
-   - **Replace All**: Clears current database and restores full backup state.
-   - **Merge**: Appends backup records into current database while preserving existing data.
-7. User clicks "Confirm Import".
-8. Client sends `POST /api/import` payload to backend.
-9. Backend executes an atomic SQLite transaction (`db.transaction()`).
-10. Backend returns success confirmation.
-11. Client closes modal, shows success toast, and refreshes all UI views.
+1. User opens Data Backup Options modal and selects a JSON file.
+2. Client parses JSON data and displays summary breakdown (including categories, projects, tasks, subtasks, and diary counts).
+3. User selects import strategy (`Replace All` or `Merge`) and clicks "Confirm Import".
+4. Backend executes an atomic SQLite transaction (`db.transaction()`).
+5. Client closes modal and displays success toast.
 
 ---
 
 ## UC-05: Category & Project Administration
 
 - **Primary Actor**: User
-- **Description**: User creates categories (e.g. university courses, startup ventures) and sub-projects to organize tasks hierarchically.
-
-### Main Success Flow
-1. User clicks the `+` button on the Categories sidebar header or next to a category name.
-2. System opens Category (`#modal-category`) or Project (`#modal-project`) creation modal.
-3. User fills in category name, icon, and accent color.
-4. User clicks submit.
-5. System issues `POST /api/categories` or `POST /api/projects`.
-6. Backend persists new entry in SQLite and returns created record.
-7. Client updates category tree in sidebar and project select dropdowns across task forms.
+- **Description**: User creates categories (e.g. university courses, startup ventures) and sub-projects to organize tasks and diaries hierarchically.
 
 ---
 
-## UC-06: Desktop Task Alerts & Notifications
+## UC-06: Manage Project & Class Diaries with Markdown & Image Upload
 
-- **Primary Actor**: User / Browser Notification Engine
-- **Description**: The application sends native OS notifications for tasks due today or overdue.
+- **Primary Actor**: User (Student / Developer)
+- **Description**: User creates, edits, and reads markdown diary entries for course lecture notes, sprint logs, or project thoughts.
+- **Preconditions**: User selects a Category or Project and switches to the "Diaries" sub-tab (or selects "All Diaries" in sidebar).
 
 ### Main Success Flow
-1. User clicks the bell icon in top navigation bar or notification prompt banner.
-2. Browser displays native permission prompt requesting notification authorization.
-3. User selects "Allow".
-4. Application initializes a 60-second background polling timer (`checkAndSendDueNotifications`).
-5. When a task's due date matches current day or is overdue, system fires a native browser desktop alert (`new Notification(...)`).
+1. User clicks "New Entry" button (positioned on the right side of the filter bar).
+2. System opens the `#modal-diary` modal dialog.
+3. User enters title, selects project, and types entry content in Markdown format.
+4. **Pasting Screenshots**: User pastes an image from the clipboard (`Ctrl+V`) directly into the textarea:
+   - System catches `paste` event, extracts image blob, and sends `POST /api/diaries/upload-image`.
+   - Backend saves file to `./uploads/diary-images/filename.png` and returns static URL.
+   - Client inserts `![pasted image](/uploads/diary-images/filename.png)` tag into the textarea.
+5. **Live Markdown Preview**: User clicks the "Preview" tab to preview rendered GFM markdown.
+6. **Task Attachment**: User checks tasks in the "Attach Tasks" checklist picker to link them to the entry.
+7. User clicks "Save Entry".
+8. System sends `POST /api/diaries` or `PUT /api/diaries/:id`.
+9. System reloads diaries list and displays compact entry cards.
+10. **Card Expansion**: User clicks the header or chevron of a diary card to expand full rendered Markdown text and task pills.
+
+---
+
+## UC-07: Desktop Task Alerts & Notifications
+
+- **Primary Actor**: User / Browser Notification Engine
+- **Description**: The application sends native OS notifications for due or overdue tasks.

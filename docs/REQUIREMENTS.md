@@ -1,4 +1,4 @@
-# Software Requirements Specification (SRS) - SCJ28
+# Software Requirements Specification (SRS) - SCJ28 (v0.3.1)
 
 ## 1. Introduction
 
@@ -6,7 +6,7 @@
 This document specifies the software requirements for the SCJ28 Academic & Startup Task Manager. It defines the functional capabilities, performance criteria, user interaction rules, data integrity guidelines, and architectural constraints necessary for developer implementation and maintenance.
 
 ### 1.2 Scope
-SCJ28 is a single-page task management web application engineered for organizing university course workloads, personal goals, and startup projects. It provides dynamic hierarchical categorization, 4-tier task priorities, multi-view execution layouts (List, Kanban, Calendar), automated project context recognition, browser desktop notifications, and full database JSON import/export capability.
+SCJ28 is a single-page task & diary management web application engineered for organizing university course workloads (around 6 main classes), personal goals, and startup projects. It provides dynamic hierarchical categorization, 4-tier task priorities, multi-view execution layouts (List, Kanban, Calendar), Markdown Project & Class Diaries with clipboard image pasting and task linking, browser desktop notifications, compact card expand/collapse interactions, and full database JSON import/export capability.
 
 ---
 
@@ -14,8 +14,9 @@ SCJ28 is a single-page task management web application engineered for organizing
 
 - **Backend**: Node.js REST API with Express.js framework (`server.js`).
 - **Database Engine**: Embedded SQLite3 database via synchronous `better-sqlite3` driver (`database.js`).
-- **Frontend Architecture**: Dependency-free Vanilla HTML5, standard CSS3 variables, and ES6 JavaScript (`public/app.js`).
-- **Styling Paradigm**: Minimalist dark theme (`#0a0a0a` background, `#111111` sidebar, `#161616` surfaces, `#ff3333` accent red).
+- **Storage**: Server filesystem storage at `./uploads/diary-images/` for pasted markdown images & `./bkg-image/` for custom wallpaper background images.
+- **Frontend Architecture**: Dependency-free Vanilla HTML5, standard CSS3 variables, `marked.js` markdown parser, and ES6 JavaScript (`public/app.js`).
+- **Styling Paradigm**: Minimalist dark theme (`#0a0a0a` background, `#ff3333` accent red, glassmorphic blurred panels with customizable panel dark opacity).
 
 ---
 
@@ -24,7 +25,7 @@ SCJ28 is a single-page task management web application engineered for organizing
 ### 3.1 Category & Project Management
 - **FR-01 (Category & Project CRUD)**: The system shall allow users to create, edit (name, icon, color), and delete top-level Categories and Projects in the left sidebar tree.
 - **FR-02 (Project Creation & Association)**: The system shall allow users to create and edit Projects bound to a parent Category.
-- **FR-03 (Cascading Deletion)**: Deleting a Project or Category shall automatically perform a cascading delete of all associated Tasks and Subtasks.
+- **FR-03 (Cascading Deletion)**: Deleting a Project or Category shall automatically perform a cascading delete of all associated Tasks, Subtasks, Diaries, and Diary Task links.
 - **FR-03b (Theme & Color Customization)**: The system shall allow users to change the website accent color theme (default red `#ff3333`) via a preset palette or custom hex picker, persisting choice in `settings.json`.
 
 ### 3.2 Task & Subtask Management
@@ -38,35 +39,27 @@ SCJ28 is a single-page task management web application engineered for organizing
   - `4`: Low (Muted display)
 - **FR-06 (Subtasks Checklist)**: Each task may contain an ordered list of subtask items. Checking off a subtask must dynamically update inline progress bars and completion percentages (`completed / total`).
 
-### 3.3 Views & Dynamic Filtering
-- **FR-07 (Multi-View Layouts)**: The UI shall support three view modes:
-  1. **List View**: Chronological view with status and priority dropdown filters.
-  2. **Kanban Board View**: Interactive drag-and-drop board across 3 columns (`To Do`, `In Progress`, `Completed`). Dropping a card into a column updates the task status in real-time.
-  3. **Calendar View**: Monthly grid rendering task pills on their respective ISO due dates.
-- **FR-08 (Smart Due Filters)**: The system shall support one-click smart sidebar filtering:
-  - `All Tasks`: Displays all active and completed tasks.
-  - `Due Today`: Filters tasks due before 23:59:59 of the current date.
-  - `Next 7 Days`: Filters upcoming tasks due within the next 7 days.
-  - `Overdue`: Filters incomplete tasks with a due date strictly prior to the current timestamp.
-- **FR-09 (Full-Text Search)**: The system shall provide instant client debounced search filtering across task titles and descriptions.
+### 3.3 Project & Class Diaries Subsystem
+- **FR-07 (Navigation Sub-Tabs & All Diaries Filter)**: Selecting any Category or Project in the left sidebar displays top sub-tabs (`Tasks` | `Diaries`) for that context. The left sidebar also includes an "All Diaries" smart filter item.
+- **FR-08 (Diary CRUD & Markdown Rendering)**: Users can create, edit, and delete diary entries. Content supports full Markdown rendering (using `marked.js` with GFM task lists `[ ]` and line break support `\n`).
+- **FR-09 (Clipboard Image Paste & Storage)**: Pasting screenshots/images (`Ctrl+V`) into the diary Markdown editor textarea automatically uploads the image to `./uploads/diary-images/` via `POST /api/diaries/upload-image` and embeds standard Markdown image tags `![image](/uploads/diary-images/filename)` into the text.
+- **FR-10 (Task Linking & Attachment)**: Users can attach/link multiple existing tasks from the project/category to a diary entry via junction table `diary_tasks`.
+- **FR-11 (Compact Card & Click-to-Expand Interaction)**: Task and Diary cards render in compact mode by default. Clicking the header area or chevron button expands the card to reveal full details/markdown. Text selection inside card details does not trigger card collapse.
 
-### 3.4 Data Backup & Portability
-- **FR-10 (JSON Database Export)**:
-  - The system shall provide a REST endpoint `GET /api/export` that outputs the full SQLite database state (all categories, projects, tasks including `reminder_frequency`, and subtasks) as a structured JSON file.
-  - The client shall trigger a direct browser download named `scj28_backup_YYYY-MM-DD.json`.
-- **FR-11 (JSON Database Import & Strategy Selection)**:
-  - The system shall provide a REST endpoint `POST /api/import` accepting JSON backups.
-  - The system shall present an interactive modal showing the item counts found in the JSON file and offer two import strategies:
-    - **Replace All**: Clears existing database tables in an atomic transaction and restores the backup.
-    - **Merge**: Retains existing data and inserts imported items, dynamically re-mapping Category and Project foreign keys.
+### 3.4 Views & Dynamic Filtering
+- **FR-12 (Multi-View Layouts)**: The UI shall support three task view modes (List View, Kanban Board View, Calendar View) and a dedicated Diaries View.
+- **FR-13 (Smart Filters)**: The system shall support one-click smart sidebar filtering (`All Tasks`, `Due Today`, `Next 7 Days`, `Overdue`, `All Diaries`).
+- **FR-14 (Full-Text Search)**: The system shall provide instant debounced search filtering across task titles/descriptions and diary titles/content.
 
-### 3.5 Desktop Notifications & Frequency Engine
-- **FR-12 (Web Desktop Alerts & Frequency Engine)**:
-  - The system shall integrate with the HTML5 Browser Notification API.
-  - When enabled, a background polling check runs every 60 seconds.
-  - **Smart Priority Frequency**: Urgent (P1) tasks notify frequently (every 3 hours / 4x per day), High (P2) tasks notify 2x per day (every 12 hours), Medium (P3) tasks notify 1x per day (every 24 hours), and Low (P4) tasks notify at due time.
-  - Custom user overrides (`hourly`, `every_3h`, `twice_daily`, `daily`, `due_only`, `none`) are respected and stored persistently.
-  - Notification timestamps are stored in persistent client storage (`localStorage`) to prevent duplicate alerts upon page reload.
+### 3.5 Data Backup & Portability
+- **FR-15 (JSON Database Export)**:
+  - The system shall provide a REST endpoint `GET /api/export` that outputs the full SQLite database state (all categories, projects, tasks, subtasks, diaries, and diary task links) as a structured JSON file.
+- **FR-16 (JSON Database Import & Strategy Selection)**:
+  - The system shall provide a REST endpoint `POST /api/import` accepting JSON backups (`mode: replace` or `merge`).
+  - The backup options and import modals explicitly instruct users that JSON files contain all database records, while uploaded images (`./uploads/diary-images/`) must be manually backed up separately from the server directory if desired.
+
+### 3.6 Desktop Notifications & Frequency Engine
+- **FR-17 (Web Desktop Alerts)**: Polling engine runs every 60 seconds firing HTML5 browser desktop alerts for due and overdue tasks based on user notification frequency preferences.
 
 ---
 
@@ -74,17 +67,12 @@ SCJ28 is a single-page task management web application engineered for organizing
 
 ### 4.1 Performance & Responsiveness
 - **NFR-01 (Low Latency)**: REST API responses shall execute within under 50ms for local SQLite queries.
-- **NFR-02 (Zero-Build Frontend)**: The client application must run directly in standard modern web browsers (Chrome, Firefox, Safari, Edge) without requiring compilation tools (Webpack, Vite, Babel).
+- **NFR-02 (Zero-Build Frontend)**: The client application must run directly in standard modern web browsers (Chrome, Firefox, Safari, Edge) without requiring compilation tools.
 
 ### 4.2 Data Integrity & Security
-- **NFR-03 (Transactional Safety)**: Foreign keys (`foreign_keys = ON`) and cascade deletions must be enforced by SQLite. Import operations must execute within single SQLite transactions (`db.transaction()`) to prevent partial database corruption.
-- **NFR-04 (Sanitization)**: HTML special characters in task titles and descriptions must be escaped on client rendering to prevent Cross-Site Scripting (XSS).
+- **NFR-03 (Transactional Safety)**: Foreign keys (`foreign_keys = ON`) and cascade deletions must be enforced by SQLite. Import operations must execute within single SQLite transactions (`db.transaction()`).
+- **NFR-04 (Sanitization)**: HTML special characters in titles and descriptions must be escaped on client rendering to prevent Cross-Site Scripting (XSS).
 
 ### 4.3 Design & UX System
-- **NFR-05 (Theme Consistency)**: The UI must strictly follow the minimalist black/white/red dark mode design palette:
-  - Primary Background: `#0a0a0a`
-  - Sidebar: `#111111`
-  - Surfaces/Cards: `#161616` / `#1c1c1c`
-  - Accent Color: `#ff3333`
-  - Muted Text: `#888888`
-- **NFR-06 (Form Input Accessibility)**: All input text fields containing icons must maintain `z-index: 2`, `pointer-events: none` on icons, and appropriate left padding (`padding-left: 38px`) to ensure clear visual alignment.
+- **NFR-05 (Theme Consistency)**: Minimalist dark mode with customizable panel opacity (60% to 100%).
+- **NFR-06 (Form Accessibility & Dark Combos)**: Form inputs, datetime-local calendar icons, and `<select>` dropdown option popups must render in dark mode styling (`#1a1a1a` option background, white calendar icon, 38px select right padding).

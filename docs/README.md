@@ -1,13 +1,13 @@
 # SCJ28 Developer Documentation
 
-Welcome to the **SCJ28 Developer Documentation**. This documentation suite provides technical specifications, operational architecture, system requirements, use case specifications, and structural diagrams to help developers understand, maintain, and extend the SCJ28 Task Management platform.
+Welcome to the **SCJ28 Developer Documentation** (v0.3.1). This documentation suite provides technical specifications, operational architecture, system requirements, use case specifications, and structural diagrams to help developers understand, maintain, and extend the SCJ28 Task & Diary Management platform.
 
 ---
 
 ## 📚 Documentation Index
 
 1. [**Requirements Specification (`REQUIREMENTS.md`)**](./REQUIREMENTS.md)
-   - Functional requirements (Task management, Smart filtering, Project context recognition, Import/Export, Desktop Notifications).
+   - Functional requirements (Task management, Smart filtering, Project & Class Diaries, Clipboard Image Uploads, Compact Card Expansion, Import/Export, Desktop Notifications).
    - Non-functional requirements (Performance, Storage, Security, UI Design System).
 
 2. [**Use Cases & User Flows (`USE_CASES.md`)**](./USE_CASES.md)
@@ -30,23 +30,27 @@ SCJ28 is a lightweight, zero-build single-page web application built with a deco
 ### System Stack
 - **Backend Runtime**: Node.js + Express.js
 - **Database**: SQLite3 via `better-sqlite3` (file-backed at `tasks.db` with WAL support)
+- **Image Storage**: `./uploads/diary-images/` for pasted markdown screenshots & `./bkg-image/` for wallpaper background images
 - **Frontend Engine**: Vanilla HTML5, CSS3 Variables, ES6 JavaScript (`public/`)
+- **Markdown Engine**: `marked.js` with GFM task list & line breaks support
 - **Icons**: Lucide Icon Set
-- **Design System**: Minimalist Dark Mode (`#0a0a0a` background, `#ff3333` accent highlight)
+- **Design System**: Minimalist Dark Mode (`#0a0a0a` background, `#ff3333` accent highlight, glassmorphism panel opacity)
 
 ### Project Directory Layout
 ```
 SCJ28/
-├── server.js              # Express API server entry point
-├── database.js            # SQLite database connection & migrations
+├── server.js              # Express API server entry point & static routes
+├── database.js            # SQLite database connection, schema & migrations
 ├── tasks.db               # SQLite database storage file
 ├── run.sh                 # Unix bash launcher script
 ├── run.bat                # Windows batch launcher script
+├── uploads/               # Uploaded static assets (diary-images/)
+├── bkg-image/             # Uploaded background images
 ├── src/                   # Backend SOLID Architecture
-│   ├── controllers/       # HTTP Request/Response Controllers
-│   ├── services/          # Business Logic & Transaction Services
-│   ├── repositories/      # Data Access Layer & SQLite Repositories
-│   └── routes/            # Express Router Endpoint Definitions
+│   ├── controllers/       # HTTP Request/Response Controllers (Task, Diary, Category, Project, Backup, Stats, Settings)
+│   ├── services/          # Business Logic & Transaction Services (Task, Diary, Backup, Stats, Settings)
+│   ├── repositories/      # Data Access Layer & SQLite Repositories (Task, Diary, Category, Project, Subtask)
+│   └── routes/            # Express Router Endpoint Definitions (/api/tasks, /api/diaries, etc.)
 ├── docs/                  # Developer documentation suite
 │   ├── README.md          # Master documentation index (this file)
 │   ├── REQUIREMENTS.md    # Software Requirements Specification (SRS)
@@ -60,7 +64,7 @@ SCJ28/
         ├── state/         # Centralized Reactive Store
         ├── services/      # REST API Client & Desktop Notification Engine
         ├── ui/            # Modal & Toast Managers
-        ├── renderers/     # Component View Renderers (List, Kanban, Calendar, Tree, Stats)
+        ├── renderers/     # Component View Renderers (List, Kanban, Calendar, Diary, Tree, Stats)
         └── app.js         # Frontend Orchestrator & Event Listener Bootstrap
 ```
 

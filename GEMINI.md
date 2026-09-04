@@ -112,7 +112,7 @@ SCJ28/
    - Quick launch script (Linux/macOS): `./run.sh` (starts server on port 2800 and opens browser automatically)
    - Quick launch script (Windows): `run.bat` or `run.cmd`
    - Direct node command: `node server.js`
-   - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.2)
+   - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.3.1)
 
 2. **API Conventions**:
    - All REST API routes are prefixed with `/api/`.

@@ -1,4 +1,4 @@
-# Class Diagram & System Architecture Models - SCJ28
+# Class Diagram & System Architecture Models - SCJ28 (v0.3.1)
 
 This document presents structural diagrams, database entity-relationship models, UML class representations, and client state contracts for SCJ28.
 
@@ -13,6 +13,10 @@ erDiagram
     CATEGORIES ||--o{ PROJECTS : "has many (1:N, ON DELETE CASCADE)"
     PROJECTS ||--o{ TASKS : "has many (1:N, ON DELETE CASCADE)"
     TASKS ||--o{ SUBTASKS : "has many (1:N, ON DELETE CASCADE)"
+    PROJECTS ||--o{ DIARIES : "has many (1:N, ON DELETE CASCADE)"
+    CATEGORIES ||--o{ DIARIES : "has many (1:N, ON DELETE CASCADE)"
+    DIARIES ||--o{ DIARY_TASKS : "has many (1:N, ON DELETE CASCADE)"
+    TASKS ||--o{ DIARY_TASKS : "has many (1:N, ON DELETE CASCADE)"
 
     CATEGORIES {
         int id PK "AUTOINCREMENT"
@@ -50,6 +54,21 @@ erDiagram
         int completed "0 or 1"
         int position "Ordering index"
     }
+
+    DIARIES {
+        int id PK "AUTOINCREMENT"
+        int project_id FK "NULLABLE"
+        int category_id FK "NULLABLE"
+        string title "NOT NULL"
+        string content "Markdown text"
+        datetime created_at "DEFAULT CURRENT_TIMESTAMP"
+        datetime updated_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    DIARY_TASKS {
+        int diary_id PK, FK "NOT NULL"
+        int task_id PK, FK "NOT NULL"
+    }
 ```
 
 ---
@@ -85,7 +104,15 @@ classDiagram
         +updateTask(req, res): void
         +patchStatus(req, res): void
         +deleteTask(req, res): void
-        +toggleSubtask(req, res): void
+    }
+
+    class DiaryController {
+        +getDiaries(req, res): void
+        +getDiaryById(req, res): void
+        +createDiary(req, res): void
+        +updateDiary(req, res): void
+        +deleteDiary(req, res): void
+        +uploadImage(req, res): void
     }
 
     class BackupController {
@@ -93,17 +120,17 @@ classDiagram
         +importBackup(req, res): void
     }
 
-    class StatsController {
-        +getStats(req, res): void
-    }
-
     class TaskService {
         +getTasks(filters): Task[]
         +createTask(data): Task
         +updateTask(id, data): Task
-        +updateTaskStatus(id, status): object
-        +deleteTask(id): void
-        +toggleSubtask(id): object
+    }
+
+    class DiaryService {
+        +getDiaries(filters): Diary[]
+        +createDiary(data): Diary
+        +updateDiary(id, data): Diary
+        +saveUploadedImage(base64Data, originalName): object
     }
 
     class BackupService {
@@ -111,50 +138,29 @@ classDiagram
         +importData(payload): ImportResult
     }
 
-    class StatsService {
-        +getStats(): StatsObject
-    }
-
-    class CategoryRepository {
-        +findAll(): Category[]
-        +create(data): Category
-    }
-
-    class ProjectRepository {
-        +findAll(): Project[]
-        +create(data): Project
-        +delete(id): void
-    }
-
     class TaskRepository {
         +findFiltered(filters): Task[]
         +create(data): int
         +update(id, data): void
-        +updateStatus(id, status): void
-        +delete(id): void
     }
 
-    class SubtaskRepository {
-        +findByTaskId(taskId): Subtask[]
-        +create(taskId, title, completed, position): void
-        +toggle(id): Subtask
+    class DiaryRepository {
+        +findFiltered(filters): Diary[]
+        +create(data): Diary
+        +setAttachedTasks(diaryId, taskIds): void
     }
 
     ExpressServer --> ApiRouter : mounts
-    ApiRouter --> CategoryController
-    ApiRouter --> ProjectController
     ApiRouter --> TaskController
+    ApiRouter --> DiaryController
     ApiRouter --> BackupController
-    ApiRouter --> StatsController
 
     TaskController --> TaskService : delegates
+    DiaryController --> DiaryService : delegates
     BackupController --> BackupService : delegates
-    StatsController --> StatsService : delegates
 
-    CategoryController --> CategoryRepository : uses
-    ProjectController --> ProjectRepository : uses
     TaskService --> TaskRepository : uses
-    TaskService --> SubtaskRepository : uses
+    DiaryService --> DiaryRepository : uses
 ```
 
 ---
@@ -167,6 +173,7 @@ In `public/js/state/store.js`, the central application state is held within a si
 interface ClientState {
   categories: CategoryWithProjects[];
   tasks: TaskWithSubtasks[];
+  diaries: DiaryWithAttachedTasks[];
   stats: {
     total: number;
     completed: number;
@@ -174,15 +181,17 @@ interface ClientState {
     overdue: number;
     dueToday: number;
   };
-  activeFilter: 'all' | 'today' | 'upcoming' | 'overdue';
+  activeFilter: 'all' | 'today' | 'upcoming' | 'overdue' | 'diaries';
   activeCategory: number | null;
   activeProject: number | null;
+  activeTab: 'tasks' | 'diaries';
   currentView: 'list' | 'kanban' | 'calendar';
   searchQuery: string;
   filterStatus: string;
   filterPriority: string;
   calendarDate: Date;
   editingTaskId: number | null;
+  editingDiaryId: number | null;
 }
 ```
 
@@ -197,65 +206,14 @@ The JSON schema contract produced by `GET /api/export` and accepted by `POST /ap
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "version": { "type": "integer", "default": 1 },
+    "version": { "type": "integer", "default": 2 },
     "exported_at": { "type": "string", "format": "date-time" },
-    "categories": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" },
-          "icon": { "type": "string" },
-          "color": { "type": "string" }
-        },
-        "required": ["name"]
-      }
-    },
-    "projects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "category_id": { "type": "integer" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "color": { "type": "string" }
-        },
-        "required": ["category_id", "name"]
-      }
-    },
-    "tasks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "project_id": { "type": "integer" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "due_date": { "type": ["string", "null"] },
-          "priority": { "type": "integer" },
-          "status": { "type": "string" }
-        },
-        "required": ["project_id", "title"]
-      }
-    },
-    "subtasks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "task_id": { "type": "integer" },
-          "title": { "type": "string" },
-          "completed": { "type": "integer" },
-          "position": { "type": "integer" }
-        },
-        "required": ["task_id", "title"]
-      }
-    }
+    "categories": { "type": "array" },
+    "projects": { "type": "array" },
+    "tasks": { "type": "array" },
+    "subtasks": { "type": "array" },
+    "diaries": { "type": "array" },
+    "diary_tasks": { "type": "array" }
   }
 }
 ```

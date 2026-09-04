@@ -1,5 +1,5 @@
 // SCJ28 Progressive Web App - Service Worker
-const CACHE_NAME = 'scj28-v0.2';
+const CACHE_NAME = 'scj28-v0.3.1';
 
 const STATIC_ASSETS = [
   './',
@@ -21,7 +21,9 @@ const STATIC_ASSETS = [
   './js/renderers/kanbanRenderer.js',
   './js/renderers/listRenderer.js',
   './js/renderers/statsRenderer.js',
-  'https://unpkg.com/lucide@latest'
+  './js/renderers/diaryRenderer.js',
+  'https://unpkg.com/lucide@latest',
+  'https://cdn.jsdelivr.net/npm/marked/marked.min.js'
 ];
 
 // Service Worker Installation: Pre-cache App Shell Assets
