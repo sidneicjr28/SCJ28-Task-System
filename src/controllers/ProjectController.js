@@ -15,6 +15,18 @@ class ProjectController {
     }
   }
 
+  async updateProject(req, res) {
+    try {
+      const { id } = req.params;
+      const { category_id, name, description, color } = req.body;
+      const updated = projectRepo.update(id, { category_id, name, description, color });
+      if (!updated) return res.status(404).json({ error: 'Project not found' });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   async deleteProject(req, res) {
     try {
       const { id } = req.params;

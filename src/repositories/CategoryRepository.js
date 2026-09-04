@@ -18,6 +18,22 @@ class CategoryRepository {
     const info = stmt.run(name, icon || 'folder', color || '#ff3333');
     return this.findById(info.lastInsertRowid);
   }
+
+  update(id, { name, icon, color }) {
+    const stmt = db.prepare(`
+      UPDATE categories
+      SET name = COALESCE(?, name),
+          icon = COALESCE(?, icon),
+          color = COALESCE(?, color)
+      WHERE id = ?
+    `);
+    stmt.run(name, icon, color, id);
+    return this.findById(id);
+  }
+
+  delete(id) {
+    return db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+  }
 }
 
 module.exports = new CategoryRepository();

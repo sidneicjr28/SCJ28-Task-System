@@ -22,6 +22,19 @@ class ProjectRepository {
     return this.findById(info.lastInsertRowid);
   }
 
+  update(id, { category_id, name, description, color }) {
+    const stmt = db.prepare(`
+      UPDATE projects
+      SET category_id = COALESCE(?, category_id),
+          name = COALESCE(?, name),
+          description = COALESCE(?, description),
+          color = COALESCE(?, color)
+      WHERE id = ?
+    `);
+    stmt.run(category_id, name, description, color, id);
+    return this.findById(id);
+  }
+
   delete(id) {
     return db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   }
