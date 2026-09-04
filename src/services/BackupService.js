@@ -1,4 +1,5 @@
 const db = require('../../database');
+const settingsService = require('./SettingsService');
 
 class BackupService {
   exportData() {
@@ -6,10 +7,12 @@ class BackupService {
     const projects = db.prepare('SELECT * FROM projects ORDER BY id ASC').all();
     const tasks = db.prepare('SELECT * FROM tasks ORDER BY id ASC').all();
     const subtasks = db.prepare('SELECT * FROM subtasks ORDER BY id ASC').all();
+    const settings = settingsService.getSettings();
 
     return {
       version: 1,
       exported_at: new Date().toISOString(),
+      settings,
       categories,
       projects,
       tasks,
@@ -17,7 +20,10 @@ class BackupService {
     };
   }
 
-  importData({ categories = [], projects = [], tasks = [], subtasks = [], mode = 'replace' }) {
+  importData({ settings, categories = [], projects = [], tasks = [], subtasks = [], mode = 'replace' }) {
+    if (settings && typeof settings === 'object') {
+      settingsService.saveSettings(settings);
+    }
     const importTx = db.transaction(() => {
       if (mode === 'replace') {
         db.prepare('DELETE FROM subtasks').run();
