@@ -60,30 +60,22 @@ open_browser() {
 if command -v docker &> /dev/null && docker info &> /dev/null; then
     echo "[INFO] Docker detected! Running via Docker container..."
 
-    # Check if Docker image exists
-    if ! docker image inspect scj28-task-manager:latest &> /dev/null; then
-        echo "[INFO] Building Docker image 'scj28-task-manager:latest'..."
-        docker build -t scj28-task-manager:latest .
-    fi
-
     CONTAINER_NAME="scj28-app-$PORT"
 
-    # Check if container exists
+    echo "[INFO] Building Docker image 'scj28-task-manager:latest'..."
+    docker build -t scj28-task-manager:latest . > /dev/null
+
+    # Remove existing container if present to run with updated image
     if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-            echo "[INFO] Container $CONTAINER_NAME is already running on $URL"
-        else
-            echo "[INFO] Starting existing container $CONTAINER_NAME..."
-            docker start "$CONTAINER_NAME" > /dev/null
-        fi
-    else
-        echo "[INFO] Launching container $CONTAINER_NAME on port $PORT..."
-        docker run -d \
-            --name "$CONTAINER_NAME" \
-            -p "$PORT:2800" \
-            -v "$DIR/tasks.db:/app/tasks.db" \
-            scj28-task-manager:latest > /dev/null
+        docker rm -f "$CONTAINER_NAME" > /dev/null
     fi
+
+    echo "[INFO] Launching container $CONTAINER_NAME on port $PORT..."
+    docker run -d \
+        --name "$CONTAINER_NAME" \
+        -p "$PORT:2800" \
+        -v "$DIR/tasks.db:/app/tasks.db" \
+        scj28-task-manager:latest > /dev/null
 
     echo "[INFO] Container active! Opening $URL in browser..."
     open_browser
