@@ -185,5 +185,61 @@ export const apiService = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to remove background image');
     return data;
+  },
+
+  async getDiaries(paramsObject = {}) {
+    const params = new URLSearchParams();
+    if (paramsObject.category_id) params.append('category_id', paramsObject.category_id);
+    if (paramsObject.project_id) params.append('project_id', paramsObject.project_id);
+    if (paramsObject.search) params.append('search', paramsObject.search);
+
+    const res = await fetch(`/api/diaries?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch diaries');
+    return res.json();
+  },
+
+  async getDiaryById(id) {
+    const res = await fetch(`/api/diaries/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch diary');
+    return res.json();
+  },
+
+  async createDiary(payload) {
+    const res = await fetch('/api/diaries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create diary entry');
+    return data;
+  },
+
+  async updateDiary(id, payload) {
+    const res = await fetch(`/api/diaries/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update diary entry');
+    return data;
+  },
+
+  async deleteDiary(id) {
+    const res = await fetch(`/api/diaries/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete diary entry');
+    return res.json();
+  },
+
+  async uploadDiaryImage(payload) {
+    const res = await fetch('/api/diaries/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to upload diary image');
+    return data;
   }
 };

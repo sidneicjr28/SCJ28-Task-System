@@ -5,16 +5,19 @@ class Store {
     this.state = {
       categories: [],
       tasks: [],
+      diaries: [],
       stats: { total: 0, completed: 0, pending: 0, overdue: 0, dueToday: 0 },
-      activeFilter: 'all', // 'all', 'today', 'upcoming', 'overdue'
+      activeFilter: 'all', // 'all', 'today', 'upcoming', 'overdue', 'diaries'
       activeCategory: null,
       activeProject: null,
+      activeTab: 'tasks', // 'tasks', 'diaries'
       currentView: 'list', // 'list', 'kanban', 'calendar'
       searchQuery: '',
       filterStatus: '',
       filterPriority: '',
       calendarDate: new Date(),
-      editingTaskId: null
+      editingTaskId: null,
+      editingDiaryId: null
     };
 
     this.listeners = [];
