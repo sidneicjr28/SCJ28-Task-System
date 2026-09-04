@@ -12,6 +12,7 @@ import { renderTasksList } from './renderers/listRenderer.js';
 import { renderKanbanBoard } from './renderers/kanbanRenderer.js';
 import { renderCalendarView } from './renderers/calendarRenderer.js';
 import { renderStats } from './renderers/statsRenderer.js';
+import { renderDiariesList, parseMarkdown } from './renderers/diaryRenderer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   let pendingImportData = null;
@@ -20,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const el = {
     categoriesTree: document.getElementById('categories-tree'),
     tasksListContainer: document.getElementById('tasks-list-container'),
+    diariesListContainer: document.getElementById('diaries-list-container'),
+    viewDiaries: document.getElementById('view-diaries'),
+    contentSubtabs: document.getElementById('content-subtabs'),
     statTotal: document.getElementById('stat-total'),
     statPending: document.getElementById('stat-pending'),
     statOverdue: document.getElementById('stat-overdue'),
@@ -28,15 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     cntToday: document.getElementById('cnt-today'),
     cntUpcoming: document.getElementById('cnt-upcoming'),
     cntOverdue: document.getElementById('cnt-overdue'),
+    cntDiaries: document.getElementById('cnt-diaries'),
     viewTitle: document.getElementById('current-view-title'),
     viewSubtitle: document.getElementById('current-view-subtitle'),
     inputSearch: document.getElementById('input-search'),
+    inputDiarySearch: document.getElementById('input-diary-search'),
     filterStatus: document.getElementById('filter-status'),
     filterPriority: document.getElementById('filter-priority'),
     modalTask: document.getElementById('modal-task'),
     modalTaskTitle: document.getElementById('modal-task-title'),
     modalProject: document.getElementById('modal-project'),
     modalCategory: document.getElementById('modal-category'),
+    modalDiary: document.getElementById('modal-diary'),
     modalDataOptions: document.getElementById('modal-data-options'),
     modalImport: document.getElementById('modal-import'),
     btnThemeSettings: document.getElementById('btn-theme-settings'),
@@ -45,9 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnModalImport: document.getElementById('btn-modal-import'),
     inputImportFile: document.getElementById('input-import-file'),
     btnConfirmImport: document.getElementById('btn-confirm-import'),
+    btnNewDiary: document.getElementById('btn-new-diary'),
     formTask: document.getElementById('form-task'),
     formProject: document.getElementById('form-project'),
     formCategory: document.getElementById('form-category'),
+    formDiary: document.getElementById('form-diary'),
     taskId: document.getElementById('task-id'),
     taskTitle: document.getElementById('task-title'),
     taskProject: document.getElementById('task-project'),
@@ -56,6 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
     taskStatus: document.getElementById('task-status'),
     taskReminder: document.getElementById('task-reminder'),
     taskDesc: document.getElementById('task-desc'),
+    diaryId: document.getElementById('diary-id'),
+    diaryTitle: document.getElementById('diary-title'),
+    diaryProject: document.getElementById('diary-project'),
+    diaryContent: document.getElementById('diary-content'),
+    diaryTasksPicker: document.getElementById('diary-tasks-picker'),
+    tabEditorWrite: document.getElementById('tab-editor-write'),
+    tabEditorPreview: document.getElementById('tab-editor-preview'),
+    editorPaneWrite: document.getElementById('editor-pane-write'),
+    editorPanePreview: document.getElementById('editor-pane-preview'),
+    btnSaveDiary: document.getElementById('btn-save-diary'),
     subtasksEditorList: document.getElementById('subtasks-editor-list'),
     btnAddSubtaskRow: document.getElementById('btn-add-subtask-row'),
     kbCardsTodo: document.getElementById('kb-cards-todo'),
@@ -88,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadBackgroundImage();
     await loadCategories();
     await loadTasks();
+    await loadDiaries();
     await loadStats();
 
     notificationService.checkAndSendDueNotifications(store.getState().tasks);
@@ -129,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
     val = Math.min(100, Math.max(60, val));
 
     const panelOpacityDec = (val / 100).toFixed(2);
-    // Relative overlay for inner items to keep them transparent & 2% darker overall relative to panel
     const relativeItemOpacity = (0.06 * (val / 65)).toFixed(2);
 
     document.documentElement.style.setProperty('--panel-opacity', panelOpacityDec);
@@ -223,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
       store.setState({ categories });
       renderCategoriesTree(el.categoriesTree, categories, store.getState());
       renderProjectSelectOptions(el.taskProject, categories);
+      renderProjectSelectOptions(el.diaryProject, categories);
     } catch (err) {
       showToast('Error loading categories: ' + err.message);
     }
@@ -245,6 +265,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function loadDiaries() {
+    try {
+      const state = store.getState();
+      const params = {
+        category_id: state.activeCategory,
+        project_id: state.activeProject,
+        search: state.searchQuery
+      };
+      const diaries = await apiService.getDiaries(params);
+      store.setState({ diaries });
+      if (el.cntDiaries) el.cntDiaries.textContent = diaries.length;
+    } catch (err) {
+      showToast('Error loading diaries: ' + err.message);
+    }
+  }
+
   async function loadStats() {
     try {
       const stats = await apiService.getStats();
@@ -261,18 +297,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderCurrentView() {
     const state = store.getState();
-    if (state.currentView === 'list') {
-      renderTasksList(el.tasksListContainer, state.tasks);
-    } else if (state.currentView === 'kanban') {
-      renderKanbanBoard(el, state.tasks, updateTaskStatus);
-    } else if (state.currentView === 'calendar') {
-      renderCalendarView(el, state.tasks, state.calendarDate, openEditTaskModal);
+
+    // Update content-subtabs active button
+    if (el.contentSubtabs) {
+      const subtabBtns = el.contentSubtabs.querySelectorAll('.subtab-btn');
+      subtabBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
+      });
     }
+
+    const isDiariesView = state.activeTab === 'diaries' || state.activeFilter === 'diaries';
+
+    if (isDiariesView) {
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      if (el.viewDiaries) el.viewDiaries.classList.add('active');
+      renderDiariesList(el.diariesListContainer, state.diaries);
+    } else {
+      if (el.viewDiaries) el.viewDiaries.classList.remove('active');
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      const pane = document.getElementById(`view-${state.currentView}`);
+      if (pane) pane.classList.add('active');
+
+      if (state.currentView === 'list') {
+        renderTasksList(el.tasksListContainer, state.tasks);
+      } else if (state.currentView === 'kanban') {
+        renderKanbanBoard(el, state.tasks, updateTaskStatus);
+      } else if (state.currentView === 'calendar') {
+        renderCalendarView(el, state.tasks, state.calendarDate, openEditTaskModal);
+      }
+    }
+
     renderStats(el, state.stats);
   }
 
   // ----------------------------------------------------
-  // Task Actions
+  // Task & Diary Actions
   // ----------------------------------------------------
 
   async function updateTaskStatus(taskId, status) {
@@ -305,10 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ----------------------------------------------------
-  // Category & Project Actions
-  // ----------------------------------------------------
-
   async function deleteCategory(catId) {
     try {
       await apiService.deleteCategory(catId);
@@ -321,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       await loadCategories();
       await loadTasks();
+      await loadDiaries();
       await loadStats();
     } catch (err) {
       showToast('Error deleting category: ' + err.message);
@@ -339,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       await loadCategories();
       await loadTasks();
+      await loadDiaries();
       await loadStats();
     } catch (err) {
       showToast('Error deleting project: ' + err.message);
@@ -346,7 +403,178 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // Modal Handlers
+  // Diary Functions & Modals
+  // ----------------------------------------------------
+
+  function openCreateDiaryModal() {
+    store.setState({ editingDiaryId: null });
+    const headTitle = document.getElementById('modal-diary-title-head');
+    if (headTitle) headTitle.textContent = 'New Diary Entry';
+    el.formDiary.reset();
+    el.diaryId.value = '';
+
+    if (el.editorPaneWrite) el.editorPaneWrite.style.display = 'block';
+    if (el.editorPanePreview) el.editorPanePreview.style.display = 'none';
+    if (el.tabEditorWrite) el.tabEditorWrite.classList.add('active');
+    if (el.tabEditorPreview) el.tabEditorPreview.classList.remove('active');
+
+    renderProjectSelectOptions(el.diaryProject, store.getState().categories);
+    
+    const state = store.getState();
+    if (state.activeProject) {
+      el.diaryProject.value = state.activeProject;
+    }
+
+    renderDiaryTasksPicker([]);
+    modalManager.openModal(el.modalDiary);
+  }
+
+  async function openEditDiaryModal(diaryId) {
+    try {
+      const diary = await apiService.getDiaryById(diaryId);
+      if (!diary) return;
+
+      store.setState({ editingDiaryId: diary.id });
+      const headTitle = document.getElementById('modal-diary-title-head');
+      if (headTitle) headTitle.textContent = 'Edit Diary Entry';
+
+      el.diaryId.value = diary.id;
+      el.diaryTitle.value = diary.title;
+      el.diaryContent.value = diary.content || '';
+
+      if (el.editorPaneWrite) el.editorPaneWrite.style.display = 'block';
+      if (el.editorPanePreview) el.editorPanePreview.style.display = 'none';
+      if (el.tabEditorWrite) el.tabEditorWrite.classList.add('active');
+      if (el.tabEditorPreview) el.tabEditorPreview.classList.remove('active');
+
+      renderProjectSelectOptions(el.diaryProject, store.getState().categories);
+      if (diary.project_id) el.diaryProject.value = diary.project_id;
+
+      const attachedIds = (diary.attached_tasks || []).map(t => t.id);
+      renderDiaryTasksPicker(attachedIds);
+
+      modalManager.openModal(el.modalDiary);
+    } catch (err) {
+      showToast('Error loading diary details: ' + err.message);
+    }
+  }
+
+  function renderDiaryTasksPicker(selectedTaskIds = []) {
+    if (!el.diaryTasksPicker) return;
+    el.diaryTasksPicker.innerHTML = '';
+
+    const state = store.getState();
+    let tasksToChoose = state.tasks;
+    if (state.activeProject) {
+      tasksToChoose = tasksToChoose.filter(t => t.project_id === state.activeProject);
+    }
+
+    if (tasksToChoose.length === 0) {
+      el.diaryTasksPicker.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No active tasks available to attach.</span>';
+      return;
+    }
+
+    tasksToChoose.forEach(task => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-main); cursor: pointer;';
+      const isChecked = selectedTaskIds.includes(task.id);
+      label.innerHTML = `
+        <input type="checkbox" name="diary-attached-task" value="${task.id}" ${isChecked ? 'checked' : ''}>
+        <span>${escapeHtml(task.title)}</span>
+      `;
+      el.diaryTasksPicker.appendChild(label);
+    });
+  }
+
+  async function handleDiaryFormSubmit(e) {
+    e.preventDefault();
+    const diaryIdVal = el.diaryId.value;
+    const title = el.diaryTitle.value.trim();
+    const content = el.diaryContent.value;
+    const projIdVal = el.diaryProject.value;
+    const project_id = projIdVal ? Number(projIdVal) : null;
+    
+    let category_id = store.getState().activeCategory;
+    if (!project_id && !category_id) {
+      const cats = store.getState().categories;
+      if (cats.length > 0) category_id = cats[0].id;
+    }
+
+    const checkboxes = el.diaryTasksPicker.querySelectorAll('input[name="diary-attached-task"]:checked');
+    const task_ids = Array.from(checkboxes).map(cb => Number(cb.value));
+
+    const payload = {
+      title,
+      content,
+      project_id,
+      category_id,
+      task_ids
+    };
+
+    try {
+      if (diaryIdVal) {
+        await apiService.updateDiary(diaryIdVal, payload);
+        showToast('Diary entry updated successfully');
+      } else {
+        await apiService.createDiary(payload);
+        showToast('Diary entry created successfully');
+      }
+
+      modalManager.closeModal(el.modalDiary);
+      await loadDiaries();
+    } catch (err) {
+      showToast('Error saving diary: ' + err.message);
+    }
+  }
+
+  async function deleteDiary(diaryId) {
+    try {
+      await apiService.deleteDiary(diaryId);
+      showToast('Diary entry deleted');
+      await loadDiaries();
+    } catch (err) {
+      showToast('Error deleting diary: ' + err.message);
+    }
+  }
+
+  function handleDiaryContentPaste(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.indexOf('image') === 0) {
+        e.preventDefault();
+        const blob = item.getAsFile();
+        const reader = new FileReader();
+
+        reader.onload = async (event) => {
+          try {
+            showToast('Uploading pasted image...');
+            const result = await apiService.uploadDiaryImage({
+              image: event.target.result,
+              name: blob.name || 'pasted_image.png'
+            });
+
+            const markdownImageTag = `\n![pasted image](${result.url})\n`;
+            const cursorPos = el.diaryContent.selectionStart;
+            const textBefore = el.diaryContent.value.substring(0, cursorPos);
+            const textAfter = el.diaryContent.value.substring(cursorPos);
+            el.diaryContent.value = textBefore + markdownImageTag + textAfter;
+
+            showToast('Image pasted and uploaded successfully!');
+          } catch (err) {
+            showToast('Error uploading image: ' + err.message);
+          }
+        };
+
+        reader.readAsDataURL(blob);
+        break;
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+  // Task Modal Handlers
   // ----------------------------------------------------
 
   function openCreateTaskModal() {
@@ -450,79 +678,62 @@ document.addEventListener('DOMContentLoaded', () => {
     modalManager.openModal(el.modalProject);
   }
 
-  function openThemeModal() {
-    const modalTheme = document.getElementById('modal-theme');
-    const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-red').trim() || '#ff3333';
-
-    const customColorInput = document.getElementById('input-custom-color');
-    const customHexInput = document.getElementById('input-custom-hex');
-
-    customColorInput.value = currentAccent;
-    customHexInput.value = currentAccent;
-
-    const presets = document.querySelectorAll('input[name="theme-preset"]');
-    presets.forEach(p => {
-      p.checked = p.value.toLowerCase() === currentAccent.toLowerCase();
-    });
-
-    const savedOpacity = localStorage.getItem('scj28_panel_opacity') || 65;
-    applyPanelOpacity(savedOpacity);
-
-    modalManager.openModal(modalTheme);
-  }
-
   function addSubtaskRow(title = '', completed = false) {
     const row = document.createElement('div');
-    row.className = 'subtask-editor-row';
+    row.className = 'subtask-edit-row';
+    row.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 8px;';
     row.innerHTML = `
-      <input type="checkbox" class="subtask-row-completed" ${completed ? 'checked' : ''}>
-      <input type="text" class="subtask-row-title" value="${escapeHtml(title)}" placeholder="Checklist item title...">
-      <button type="button" class="icon-btn-sm btn-remove-subtask-row"><i data-lucide="trash"></i></button>
+      <input type="checkbox" class="subtask-edit-chk" ${completed ? 'checked' : ''}>
+      <input type="text" class="subtask-edit-title" value="${escapeHtml(title)}" placeholder="Subtask item..." style="flex: 1;">
+      <button type="button" class="icon-btn-sm btn-remove-subtask" title="Remove Subtask">
+        <i data-lucide="x"></i>
+      </button>
     `;
-
-    row.querySelector('.btn-remove-subtask-row').addEventListener('click', () => {
-      row.remove();
-    });
-
+    row.querySelector('.btn-remove-subtask').addEventListener('click', () => row.remove());
     el.subtasksEditorList.appendChild(row);
     if (window.lucide) window.lucide.createIcons();
   }
 
-  // ----------------------------------------------------
-  // Form Submissions
-  // ----------------------------------------------------
-
   async function handleTaskFormSubmit(e) {
     e.preventDefault();
 
+    const taskIdVal = el.taskId.value;
+    const title = el.taskTitle.value.trim();
+    const project_id = Number(el.taskProject.value);
+    const priority = Number(el.taskPriority.value);
+    const due_date = el.taskDueDate.value || null;
+    const status = el.taskStatus.value;
+    const reminder_frequency = el.taskReminder ? el.taskReminder.value : 'smart';
+    const description = el.taskDesc.value;
+
     const subtasks = [];
-    document.querySelectorAll('.subtask-editor-row').forEach(row => {
-      const title = row.querySelector('.subtask-row-title').value.trim();
-      const completed = row.querySelector('.subtask-row-completed').checked;
-      if (title) {
-        subtasks.push({ title, completed });
+    const rows = el.subtasksEditorList.querySelectorAll('.subtask-edit-row');
+    rows.forEach((r, idx) => {
+      const t = r.querySelector('.subtask-edit-title').value.trim();
+      const c = r.querySelector('.subtask-edit-chk').checked ? 1 : 0;
+      if (t) {
+        subtasks.push({ title: t, completed: c, position: idx });
       }
     });
 
     const payload = {
-      project_id: Number(el.taskProject.value),
-      title: el.taskTitle.value.trim(),
-      description: el.taskDesc.value.trim(),
-      due_date: el.taskDueDate.value || null,
-      priority: Number(el.taskPriority.value),
-      status: el.taskStatus.value,
-      reminder_frequency: el.taskReminder.value,
+      project_id,
+      title,
+      description,
+      due_date,
+      priority,
+      status,
+      reminder_frequency,
       subtasks
     };
 
     try {
-      const state = store.getState();
-      if (state.editingTaskId) {
-        await apiService.updateTask(state.editingTaskId, payload);
-        showToast('Task updated successfully!');
+      if (taskIdVal) {
+        await apiService.updateTask(taskIdVal, payload);
+        showToast('Task updated successfully');
       } else {
         await apiService.createTask(payload);
-        showToast('Task created successfully!');
+        showToast('Task created successfully');
       }
 
       modalManager.closeModal(el.modalTask);
@@ -535,26 +746,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleProjectFormSubmit(e) {
     e.preventDefault();
-
-    const id = document.getElementById('project-id').value;
-    const payload = {
-      category_id: Number(document.getElementById('project-category-id').value),
-      name: document.getElementById('project-name').value.trim(),
-      description: document.getElementById('project-desc').value.trim(),
-      color: document.getElementById('project-color').value
-    };
+    const projId = document.getElementById('project-id').value;
+    const category_id = Number(document.getElementById('project-category-id').value);
+    const name = document.getElementById('project-name').value.trim();
+    const description = document.getElementById('project-desc').value.trim();
+    const color = document.getElementById('project-color').value;
 
     try {
-      if (id) {
-        await apiService.updateProject(id, payload);
-        showToast('Project updated!');
+      if (projId) {
+        await apiService.updateProject(projId, { name, description, color });
+        showToast('Project updated');
       } else {
-        await apiService.createProject(payload);
-        showToast('Project created!');
+        await apiService.createProject({ category_id, name, description, color });
+        showToast('Project created');
       }
       modalManager.closeModal(el.modalProject);
       await loadCategories();
-      await loadTasks();
     } catch (err) {
       showToast('Error saving project: ' + err.message);
     }
@@ -562,51 +769,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleCategoryFormSubmit(e) {
     e.preventDefault();
-
-    const id = document.getElementById('category-id').value;
-    const payload = {
-      name: document.getElementById('category-name').value.trim(),
-      icon: document.getElementById('category-icon').value,
-      color: document.getElementById('category-color').value
-    };
+    const catId = document.getElementById('category-id').value;
+    const name = document.getElementById('category-name').value.trim();
+    const icon = document.getElementById('category-icon').value;
+    const color = document.getElementById('category-color').value;
 
     try {
-      if (id) {
-        await apiService.updateCategory(id, payload);
-        showToast('Category updated!');
+      if (catId) {
+        await apiService.updateCategory(catId, { name, icon, color });
+        showToast('Category updated');
       } else {
-        await apiService.createCategory(payload);
-        showToast('Category created!');
+        await apiService.createCategory({ name, icon, color });
+        showToast('Category created');
       }
       modalManager.closeModal(el.modalCategory);
       await loadCategories();
-      await loadTasks();
     } catch (err) {
       showToast('Error saving category: ' + err.message);
-    }
-  }
-
-  async function handleSaveTheme() {
-    const selectedRadio = document.querySelector('input[name="theme-preset"]:checked');
-    const customHexInput = document.getElementById('input-custom-hex');
-    let chosenColor = customHexInput.value.trim();
-
-    if (selectedRadio) {
-      chosenColor = selectedRadio.value;
-    }
-
-    if (!/^#([0-9A-F]{3}){1,2}$/i.test(chosenColor)) {
-      showToast('Please enter a valid hex color code (e.g. #ff3333)');
-      return;
-    }
-
-    try {
-      await apiService.updateSettings({ accentColor: chosenColor });
-      applyAccentColor(chosenColor);
-      modalManager.closeModal(document.getElementById('modal-theme'));
-      showToast('Website color theme updated!');
-    } catch (err) {
-      showToast('Error saving theme: ' + err.message);
     }
   }
 
@@ -616,22 +795,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleExportData() {
     try {
+      showToast('Preparing backup export...');
       const data = await apiService.exportBackup();
       const jsonStr = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+
       const dateStr = new Date().toISOString().slice(0, 10);
+      const a = document.createElement('a');
       a.href = url;
-      a.download = `scj28_backup_${dateStr}.json`;
+      a.download = `SCJ28_Backup_${dateStr}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast('Database exported to JSON file!');
+      showToast('Backup downloaded successfully!');
     } catch (err) {
-      showToast('Error exporting data: ' + err.message);
+      showToast('Export failed: ' + err.message);
     }
   }
 
@@ -642,30 +823,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const data = JSON.parse(event.target.result);
-        if (!data || typeof data !== 'object') {
-          throw new Error('Invalid JSON structure');
+        pendingImportData = JSON.parse(event.target.result);
+        const fileNameEl = document.getElementById('import-filename');
+        const summaryEl = document.getElementById('import-summary');
+
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (summaryEl) {
+          const catsCount = (pendingImportData.categories || []).length;
+          const projsCount = (pendingImportData.projects || []).length;
+          const tasksCount = (pendingImportData.tasks || []).length;
+          const subCount = (pendingImportData.subtasks || []).length;
+          const diaryCount = (pendingImportData.diaries || []).length;
+
+          summaryEl.innerHTML = `
+            <strong>Backup Contents:</strong><br>
+            • Categories: ${catsCount}<br>
+            • Projects: ${projsCount}<br>
+            • Tasks: ${tasksCount} (${subCount} subtasks)<br>
+            • Diary Entries: ${diaryCount}
+          `;
         }
-
-        pendingImportData = data;
-        document.getElementById('import-filename').textContent = file.name;
-
-        const catCount = Array.isArray(data.categories) ? data.categories.length : 0;
-        const projCount = Array.isArray(data.projects) ? data.projects.length : 0;
-        const taskCount = Array.isArray(data.tasks) ? data.tasks.length : 0;
-        const subCount = Array.isArray(data.subtasks) ? data.subtasks.length : 0;
-
-        document.getElementById('import-summary').innerHTML = `
-          📌 <strong>Found in backup:</strong><br>
-          • Categories: ${catCount}<br>
-          • Projects: ${projCount}<br>
-          • Tasks: ${taskCount}<br>
-          • Subtasks: ${subCount}
-        `;
 
         modalManager.openModal(el.modalImport);
       } catch (err) {
-        showToast('Invalid JSON file: ' + err.message);
+        showToast('Invalid JSON file format: ' + err.message);
       }
     };
     reader.readAsText(file);
@@ -675,19 +856,62 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleConfirmImport() {
     if (!pendingImportData) return;
 
-    const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'replace';
+    const modeInput = document.querySelector('input[name="import-mode"]:checked');
+    const mode = modeInput ? modeInput.value : 'replace';
 
     try {
-      await apiService.importBackup({ ...pendingImportData, mode });
+      showToast('Importing data...');
+      const res = await apiService.importBackup({ ...pendingImportData, mode });
       modalManager.closeModal(el.modalImport);
-      showToast('Database imported successfully!');
       pendingImportData = null;
+
       await loadSettings();
       await loadCategories();
       await loadTasks();
+      await loadDiaries();
       await loadStats();
+
+      showToast(`Import successful! Restored ${res.counts ? res.counts.tasks : 0} tasks and ${res.counts ? res.counts.diaries : 0} diaries.`);
     } catch (err) {
-      showToast('Error importing data: ' + err.message);
+      showToast('Import failed: ' + err.message);
+    }
+  }
+
+  function openThemeModal() {
+    const state = store.getState();
+    const currentColor = (state.settings && state.settings.accentColor) || '#ff3333';
+
+    const customColorInput = document.getElementById('input-custom-color');
+    const customHexInput = document.getElementById('input-custom-hex');
+    const presets = document.querySelectorAll('input[name="theme-preset"]');
+
+    if (customColorInput) customColorInput.value = currentColor;
+    if (customHexInput) customHexInput.value = currentColor;
+
+    presets.forEach(p => {
+      p.checked = p.value.toLowerCase() === currentColor.toLowerCase();
+    });
+
+    modalManager.openModal(document.getElementById('modal-theme'));
+  }
+
+  async function handleSaveTheme() {
+    const customHexInput = document.getElementById('input-custom-hex');
+    const colorVal = customHexInput ? customHexInput.value.trim() : '#ff3333';
+
+    if (!/^#([0-9A-F]{3}){1,2}$/i.test(colorVal)) {
+      showToast('Please enter a valid hexadecimal color (e.g. #ff3333)');
+      return;
+    }
+
+    try {
+      applyAccentColor(colorVal);
+      await apiService.updateSettings({ accentColor: colorVal });
+      store.setState({ settings: { ...store.getState().settings, accentColor: colorVal } });
+      modalManager.closeModal(document.getElementById('modal-theme'));
+      showToast('Theme accent color saved!');
+    } catch (err) {
+      showToast('Error saving theme: ' + err.message);
     }
   }
 
@@ -701,6 +925,18 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('.sidebar').classList.toggle('mobile-open');
     });
 
+    // Content Sub-tabs (Tasks | Diaries) switching
+    if (el.contentSubtabs) {
+      el.contentSubtabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.subtab-btn');
+        if (!btn) return;
+        const tab = btn.dataset.tab;
+        store.setState({ activeTab: tab });
+        if (tab === 'diaries') loadDiaries();
+        else loadTasks();
+      });
+    }
+
     // View mode toggles
     document.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -709,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
         targetBtn.classList.add('active');
 
         const currentView = targetBtn.dataset.view;
-        store.setState({ currentView });
+        store.setState({ currentView, activeTab: 'tasks' });
 
         document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
         document.getElementById(`view-${currentView}`).classList.add('active');
@@ -725,12 +961,17 @@ document.addEventListener('DOMContentLoaded', () => {
         item.classList.add('active');
 
         const activeFilter = item.dataset.filter;
-        store.setState({ activeFilter, activeCategory: null, activeProject: null });
-
-        el.viewTitle.textContent = item.querySelector('span').textContent;
-        el.viewSubtitle.textContent = `Filtered view: ${activeFilter}`;
-
-        loadTasks();
+        if (activeFilter === 'diaries') {
+          store.setState({ activeFilter: 'diaries', activeCategory: null, activeProject: null, activeTab: 'diaries' });
+          el.viewTitle.textContent = 'All Diaries';
+          el.viewSubtitle.textContent = 'Overview of all diary entries across projects';
+          loadDiaries();
+        } else {
+          store.setState({ activeFilter, activeCategory: null, activeProject: null, activeTab: 'tasks' });
+          el.viewTitle.textContent = item.querySelector('span').textContent;
+          el.viewSubtitle.textContent = `Filtered view: ${activeFilter}`;
+          loadTasks();
+        }
       });
     });
 
@@ -758,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (btnDeleteCat) {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this category? All its projects and tasks will also be deleted.')) {
+        if (confirm('Are you sure you want to delete this category? All its projects, tasks, and diaries will also be deleted.')) {
           deleteCategory(btnDeleteCat.dataset.catId);
         }
         return;
@@ -772,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (btnDeleteProj) {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this project? All its tasks will also be deleted.')) {
+        if (confirm('Are you sure you want to delete this project? All its tasks and diaries will also be deleted.')) {
           deleteProject(btnDeleteProj.dataset.projId);
         }
         return;
@@ -787,9 +1028,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const catObj = store.getState().categories.find(c => c.id === catId);
         el.viewTitle.textContent = catObj ? catObj.name : 'Category Tasks';
-        el.viewSubtitle.textContent = 'All tasks under this category';
+        el.viewSubtitle.textContent = 'All tasks & diaries under this category';
 
         loadTasks();
+        loadDiaries();
       }
 
       if (projItem) {
@@ -806,9 +1048,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         el.viewTitle.textContent = projName;
-        el.viewSubtitle.textContent = 'Project specific task view';
+        el.viewSubtitle.textContent = 'Project specific tasks and diaries';
 
         loadTasks();
+        loadDiaries();
       }
     });
 
@@ -880,6 +1123,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 250);
     });
 
+    if (el.inputDiarySearch) {
+      let diarySearchDebounce;
+      el.inputDiarySearch.addEventListener('input', (e) => {
+        clearTimeout(diarySearchDebounce);
+        diarySearchDebounce = setTimeout(() => {
+          store.setState({ searchQuery: e.target.value.trim() });
+          loadDiaries();
+        }, 250);
+      });
+    }
+
     // Filter dropdowns
     el.filterStatus.addEventListener('change', (e) => {
       store.setState({ filterStatus: e.target.value });
@@ -911,6 +1165,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chkSub) await toggleSubtask(chkSub.dataset.subId);
     });
 
+    // Diaries list delegation clicks
+    if (el.diariesListContainer) {
+      el.diariesListContainer.addEventListener('click', async (e) => {
+        const btnEdit = e.target.closest('.btn-edit-diary');
+        const btnDel = e.target.closest('.btn-delete-diary');
+
+        if (btnEdit) openEditDiaryModal(btnEdit.dataset.diaryId);
+        if (btnDel) {
+          if (confirm('Are you sure you want to delete this diary entry?')) {
+            await deleteDiary(btnDel.dataset.diaryId);
+          }
+        }
+      });
+    }
+
     // Kanban view edit/delete clicks
     document.querySelectorAll('.kanban-cards').forEach(container => {
       container.addEventListener('click', async (e) => {
@@ -930,6 +1199,37 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-new-task-sidebar').addEventListener('click', () => openCreateTaskModal());
     document.getElementById('btn-new-task-header').addEventListener('click', () => openCreateTaskModal());
     document.getElementById('btn-add-category').addEventListener('click', () => openCreateCategoryModal());
+    if (el.btnNewDiary) el.btnNewDiary.addEventListener('click', openCreateDiaryModal);
+
+    // Write / Preview Tabs in Diary Modal
+    if (el.tabEditorWrite && el.tabEditorPreview) {
+      el.tabEditorWrite.addEventListener('click', () => {
+        el.tabEditorWrite.classList.add('active');
+        el.tabEditorPreview.classList.remove('active');
+        el.editorPaneWrite.style.display = 'block';
+        el.editorPanePreview.style.display = 'none';
+      });
+
+      el.tabEditorPreview.addEventListener('click', () => {
+        el.tabEditorPreview.classList.add('active');
+        el.tabEditorWrite.classList.remove('active');
+        el.editorPaneWrite.style.display = 'none';
+        el.editorPanePreview.style.display = 'block';
+
+        const rawText = el.diaryContent.value;
+        if (rawText) {
+          el.editorPanePreview.className = 'markdown-preview-box markdown-rendered-content';
+          el.editorPanePreview.innerHTML = parseMarkdown(rawText);
+        } else {
+          el.editorPanePreview.textContent = 'Nothing to preview.';
+        }
+      });
+    }
+
+    // Paste image event in diary textarea
+    if (el.diaryContent) {
+      el.diaryContent.addEventListener('paste', handleDiaryContentPaste);
+    }
 
     // Modal Close triggers
     document.querySelectorAll('[data-close]').forEach(btn => {
@@ -943,6 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.formTask.addEventListener('submit', handleTaskFormSubmit);
     el.formProject.addEventListener('submit', handleProjectFormSubmit);
     el.formCategory.addEventListener('submit', handleCategoryFormSubmit);
+    if (el.formDiary) el.formDiary.addEventListener('submit', handleDiaryFormSubmit);
 
     // Dynamic Subtasks Builder
     el.btnAddSubtaskRow.addEventListener('click', () => addSubtaskRow());

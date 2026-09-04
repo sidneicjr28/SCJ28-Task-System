@@ -13,8 +13,9 @@
   <link rel="icon" type="image/png" href="SCJ28-square.png">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <link rel="stylesheet" href="styles.css">
-  <!-- Lucide Icons -->
+  <!-- Lucide Icons & Marked Parser -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="dark-theme">
   <div class="app-layout">
@@ -25,7 +26,7 @@
           <img src="SCJ28-square.png" alt="SCJ28 Logo" class="app-logo">
           <div class="logo-text">
             <span class="brand-title">SCJ28</span>
-            <span class="brand-subtitle">Task System v0.2</span>
+            <span class="brand-subtitle">Task System v0.3.1</span>
           </div>
         </div>
       </div>
@@ -54,6 +55,11 @@
               <i data-lucide="alert-circle"></i>
               <span>Overdue</span>
               <span class="badge badge-danger" id="cnt-overdue">0</span>
+            </li>
+            <li class="nav-item" data-filter="diaries">
+              <i data-lucide="book-open"></i>
+              <span>All Diaries</span>
+              <span class="badge" id="cnt-diaries">0</span>
             </li>
           </ul>
         </div>
@@ -142,6 +148,18 @@
           </button>
         </div>
       </header>
+
+      <!-- Content Sub-Tabs Bar (Tasks | Diaries) -->
+      <div class="content-subtabs" id="content-subtabs">
+        <button class="subtab-btn active" data-tab="tasks">
+          <i data-lucide="check-square"></i>
+          <span>Tasks</span>
+        </button>
+        <button class="subtab-btn" data-tab="diaries">
+          <i data-lucide="book-open"></i>
+          <span>Diaries</span>
+        </button>
+      </div>
 
       <!-- Stats Overview Bar -->
       <section class="stats-bar">
@@ -263,6 +281,24 @@
           </div>
           <div class="calendar-grid" id="calendar-days">
             <!-- Dynamic Days -->
+          </div>
+        </div>
+
+        <!-- 4. Diaries View -->
+        <div id="view-diaries" class="view-pane">
+          <div class="view-filters-bar">
+            <div class="search-box" style="flex: 1; max-width: 420px;">
+              <input type="text" id="input-diary-search" placeholder="Search diary entries by title or content..." autocomplete="off">
+              <i data-lucide="search" class="search-icon"></i>
+            </div>
+            <button class="btn btn-primary" id="btn-new-diary" style="margin-left: auto;">
+              <i data-lucide="plus"></i>
+              <span>New Entry</span>
+            </button>
+          </div>
+
+          <div id="diaries-list-container" class="diaries-list">
+            <!-- Dynamic Diaries Rendered Here -->
           </div>
         </div>
       </div>
@@ -421,6 +457,62 @@
     </div>
   </div>
 
+  <!-- Diary Entry Modal (Create & Edit) -->
+  <div class="modal" id="modal-diary">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-diary-title-head">New Diary Entry</h3>
+        <button class="modal-close" data-close="modal-diary"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-diary">
+        <div class="modal-body" style="padding: 16px 0;">
+          <input type="hidden" id="diary-id">
+          
+          <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <div class="form-group" style="flex: 2; margin-bottom: 0;">
+              <label for="diary-title">Title *</label>
+              <input type="text" id="diary-title" placeholder="e.g. Sprint 3 Retrospective & Architecture Notes" required>
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label for="diary-project">Project / Class</label>
+              <select id="diary-project">
+                <option value="">No Specific Project</option>
+                <!-- Dynamic Options -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="margin-bottom: 0;">Content (Markdown supported, paste screenshots/images directly)</label>
+              <div class="editor-tabs" style="display: flex; gap: 4px;">
+                <button type="button" class="btn btn-secondary btn-sm editor-tab-btn active" id="tab-editor-write">Write</button>
+                <button type="button" class="btn btn-secondary btn-sm editor-tab-btn" id="tab-editor-preview">Preview</button>
+              </div>
+            </div>
+            <div id="editor-pane-write">
+              <textarea id="diary-content" rows="12" placeholder="Write your entry in Markdown formatting... Paste images (Ctrl+V) directly into this box to auto-upload!" style="width: 100%; font-family: inherit; font-size: 0.9rem; line-height: 1.5; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: rgba(0,0,0,0.3); color: var(--text-main); resize: vertical;"></textarea>
+            </div>
+            <div id="editor-pane-preview" class="markdown-preview-box" style="display: none; min-height: 250px; max-height: 400px; padding: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: rgba(0,0,0,0.3); overflow-y: auto;">
+              <!-- Rendered Markdown Output -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="margin-bottom: 6px; display: block;">Attach Tasks to this Diary Entry</label>
+            <div id="diary-tasks-picker" class="tasks-picker-container" style="max-height: 140px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic Task Checkboxes -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-diary">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-diary">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Data Management Options Modal -->
   <div class="modal" id="modal-data-options">
     <div class="modal-content">
@@ -429,9 +521,13 @@
         <button class="modal-close" data-close="modal-data-options"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body" style="padding: 16px 0;">
-        <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.88rem; line-height: 1.4;">
+        <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.88rem; line-height: 1.4;">
           Manage your task manager data. Export a full JSON backup of your database or restore/merge data from an existing backup file.
         </p>
+        <div style="font-size: 0.82rem; color: #ffaa33; background: rgba(255, 170, 51, 0.1); border: 1px solid rgba(255, 170, 51, 0.3); border-radius: 6px; padding: 10px; margin-bottom: 16px;">
+          <i data-lucide="alert-triangle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+          <strong>Notice:</strong> JSON backups contain all categories, projects, tasks, subtasks, and diary entries text. Uploaded images (stored in <code>./uploads/diary-images/</code>) must be manually backed up separately from the server directory.
+        </div>
         <div class="data-options-grid">
           <div class="data-option-card">
             <div class="option-icon"><i data-lucide="download"></i></div>
