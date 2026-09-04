@@ -7,25 +7,31 @@ class BackupService {
     const projects = db.prepare('SELECT * FROM projects ORDER BY id ASC').all();
     const tasks = db.prepare('SELECT * FROM tasks ORDER BY id ASC').all();
     const subtasks = db.prepare('SELECT * FROM subtasks ORDER BY id ASC').all();
+    const diaries = db.prepare('SELECT * FROM diaries ORDER BY id ASC').all();
+    const diary_tasks = db.prepare('SELECT * FROM diary_tasks ORDER BY diary_id ASC, task_id ASC').all();
     const settings = settingsService.getSettings();
 
     return {
-      version: 1,
+      version: 2,
       exported_at: new Date().toISOString(),
       settings,
       categories,
       projects,
       tasks,
-      subtasks
+      subtasks,
+      diaries,
+      diary_tasks
     };
   }
 
-  importData({ settings, categories = [], projects = [], tasks = [], subtasks = [], mode = 'replace' }) {
+  importData({ settings, categories = [], projects = [], tasks = [], subtasks = [], diaries = [], diary_tasks = [], mode = 'replace' }) {
     if (settings && typeof settings === 'object') {
       settingsService.saveSettings(settings);
     }
     const importTx = db.transaction(() => {
       if (mode === 'replace') {
+        db.prepare('DELETE FROM diary_tasks').run();
+        db.prepare('DELETE FROM diaries').run();
         db.prepare('DELETE FROM subtasks').run();
         db.prepare('DELETE FROM tasks').run();
         db.prepare('DELETE FROM projects').run();
@@ -104,6 +110,38 @@ class BackupService {
 
         insertSub.run(mappedTaskId, sub.title, sub.completed ? 1 : 0, sub.position || 0);
       }
+
+      // 5. Diaries
+      const diaryIdMap = new Map();
+      const insertDiaryWithId = db.prepare('INSERT INTO diaries (id, project_id, category_id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const insertDiaryAuto = db.prepare('INSERT INTO diaries (project_id, category_id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
+
+      for (const d of diaries) {
+        const mappedProjId = d.project_id ? (projectIdMap.get(d.project_id) || d.project_id) : null;
+        const mappedCatId = d.category_id ? (categoryIdMap.get(d.category_id) || d.category_id) : null;
+
+        if (mode === 'replace' && d.id) {
+          insertDiaryWithId.run(d.id, mappedProjId, mappedCatId, d.title, d.content || '', d.created_at || new Date().toISOString(), d.updated_at || new Date().toISOString());
+          diaryIdMap.set(d.id, d.id);
+        } else {
+          const info = insertDiaryAuto.run(mappedProjId, d.title, d.content || '', d.created_at || new Date().toISOString(), d.updated_at || new Date().toISOString());
+          diaryIdMap.set(d.id, info.lastInsertRowid);
+        }
+      }
+
+      // 6. Diary Tasks
+      const insertDiaryTask = db.prepare('INSERT INTO diary_tasks (diary_id, task_id) VALUES (?, ?)');
+      for (const dt of diary_tasks) {
+        const mappedDiaryId = diaryIdMap.get(dt.diary_id) || dt.diary_id;
+        const mappedTaskId = taskIdMap.get(dt.task_id) || dt.task_id;
+        if (!mappedDiaryId || !mappedTaskId) continue;
+
+        try {
+          insertDiaryTask.run(mappedDiaryId, mappedTaskId);
+        } catch (e) {
+          // ignore duplicate entry errors
+        }
+      }
     });
 
     importTx();
@@ -114,7 +152,8 @@ class BackupService {
         categories: categories.length,
         projects: projects.length,
         tasks: tasks.length,
-        subtasks: subtasks.length
+        subtasks: subtasks.length,
+        diaries: diaries.length
       }
     };
   }
