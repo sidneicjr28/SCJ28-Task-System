@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+tasks.db
+tasks.db-journal
+tasks.db-wal
+tasks.db-shm
+.git
+.gitignore
+.env
+docs

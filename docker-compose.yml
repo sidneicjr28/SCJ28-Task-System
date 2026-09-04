@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  scj28-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: scj28-task-manager:latest
+    container_name: scj28-task-manager
+    ports:
+      - "${PORT:-2800}:2800"
+    volumes:
+      - ./tasks.db:/app/tasks.db
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=2800
