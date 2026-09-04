@@ -17,6 +17,22 @@ export const apiService = {
     return res.json();
   },
 
+  async updateCategory(id, payload) {
+    const res = await fetch(`/api/categories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update category');
+    return res.json();
+  },
+
+  async deleteCategory(id) {
+    const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete category');
+    return res.json();
+  },
+
   async createProject(payload) {
     const res = await fetch('/api/projects', {
       method: 'POST',
@@ -27,9 +43,35 @@ export const apiService = {
     return res.json();
   },
 
+  async updateProject(id, payload) {
+    const res = await fetch(`/api/projects/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update project');
+    return res.json();
+  },
+
   async deleteProject(id) {
     const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete project');
+    return res.json();
+  },
+
+  async getSettings() {
+    const res = await fetch('/api/settings');
+    if (!res.ok) throw new Error('Failed to fetch settings');
+    return res.json();
+  },
+
+  async updateSettings(payload) {
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to update settings');
     return res.json();
   },
 

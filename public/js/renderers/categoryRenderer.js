@@ -23,15 +23,33 @@ export function renderCategoriesTree(container, categories, state) {
           <i data-lucide="${iconName}"></i>
           <span>${escapeHtml(cat.name)}</span>
         </div>
-        <button class="icon-btn-sm btn-add-proj" data-cat-id="${cat.id}" title="Add Project to ${escapeHtml(cat.name)}">
-          <i data-lucide="plus"></i>
-        </button>
+        <div class="cat-actions">
+          <button class="icon-btn-sm btn-add-proj" data-cat-id="${cat.id}" title="Add Project to ${escapeHtml(cat.name)}">
+            <i data-lucide="plus"></i>
+          </button>
+          <button class="icon-btn-sm btn-edit-cat" data-cat-id="${cat.id}" title="Edit Category">
+            <i data-lucide="pencil"></i>
+          </button>
+          <button class="icon-btn-sm btn-delete-cat" data-cat-id="${cat.id}" title="Delete Category">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
       </div>
       <ul class="project-list">
         ${(cat.projects || []).map(p => `
           <li class="project-item ${state.activeProject === p.id ? 'active' : ''}" data-proj-id="${p.id}">
-            <span class="project-dot" style="background-color: ${p.color || '#ff3333'}"></span>
-            <span>${escapeHtml(p.name)}</span>
+            <div class="proj-title-wrap">
+              <span class="project-dot" style="background-color: ${p.color || '#ff3333'}"></span>
+              <span>${escapeHtml(p.name)}</span>
+            </div>
+            <div class="proj-actions">
+              <button class="icon-btn-sm btn-edit-proj" data-proj-id="${p.id}" data-cat-id="${cat.id}" title="Edit Project">
+                <i data-lucide="pencil"></i>
+              </button>
+              <button class="icon-btn-sm btn-delete-proj" data-proj-id="${p.id}" title="Delete Project">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
           </li>
         `).join('')}
       </ul>

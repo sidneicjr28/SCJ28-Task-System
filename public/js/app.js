@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modalCategory: document.getElementById('modal-category'),
     modalDataOptions: document.getElementById('modal-data-options'),
     modalImport: document.getElementById('modal-import'),
+    btnThemeSettings: document.getElementById('btn-theme-settings'),
     btnDataMenu: document.getElementById('btn-data-menu'),
     btnModalExport: document.getElementById('btn-modal-export'),
     btnModalImport: document.getElementById('btn-modal-import'),
@@ -80,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Subscribe store listener to auto-render current view when state changes
     store.subscribe(() => renderCurrentView());
 
+    await loadSettings();
     await loadCategories();
     await loadTasks();
     await loadStats();
@@ -91,8 +93,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
+  // Dynamic Theme & Color Applicator
+  // ----------------------------------------------------
+
+  function applyAccentColor(hexColor) {
+    if (!hexColor || !/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) return;
+    
+    let hex = hexColor;
+    if (hex.length === 4) {
+      hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    const darken = (col) => Math.max(0, Math.floor(col * 0.85));
+    const hoverHex = `#${darken(r).toString(16).padStart(2, '0')}${darken(g).toString(16).padStart(2, '0')}${darken(b).toString(16).padStart(2, '0')}`;
+
+    const root = document.documentElement;
+    root.style.setProperty('--accent-red', hex);
+    root.style.setProperty('--accent-red-hover', hoverHex);
+    root.style.setProperty('--accent-red-glow', `rgba(${r}, ${g}, ${b}, 0.15)`);
+    root.style.setProperty('--border-focus', hex);
+    root.style.setProperty('--p1-color', hex);
+  }
+
+  // ----------------------------------------------------
   // Data Loaders
   // ----------------------------------------------------
+
+  async function loadSettings() {
+    try {
+      const settings = await apiService.getSettings();
+      if (settings && settings.accentColor) {
+        applyAccentColor(settings.accentColor);
+        store.setState({ settings });
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    }
+  }
 
   async function loadCategories() {
     try {
@@ -183,6 +224,46 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
+  // Category & Project Actions
+  // ----------------------------------------------------
+
+  async function deleteCategory(catId) {
+    try {
+      await apiService.deleteCategory(catId);
+      showToast('Category deleted');
+      const state = store.getState();
+      if (state.activeCategory === Number(catId)) {
+        store.setState({ activeCategory: null, activeFilter: 'all' });
+        el.viewTitle.textContent = 'All Tasks';
+        el.viewSubtitle.textContent = 'Overview of all active tasks';
+      }
+      await loadCategories();
+      await loadTasks();
+      await loadStats();
+    } catch (err) {
+      showToast('Error deleting category: ' + err.message);
+    }
+  }
+
+  async function deleteProject(projId) {
+    try {
+      await apiService.deleteProject(projId);
+      showToast('Project deleted');
+      const state = store.getState();
+      if (state.activeProject === Number(projId)) {
+        store.setState({ activeProject: null, activeFilter: 'all' });
+        el.viewTitle.textContent = 'All Tasks';
+        el.viewSubtitle.textContent = 'Overview of all active tasks';
+      }
+      await loadCategories();
+      await loadTasks();
+      await loadStats();
+    } catch (err) {
+      showToast('Error deleting project: ' + err.message);
+    }
+  }
+
+  // ----------------------------------------------------
   // Modal Handlers
   // ----------------------------------------------------
 
@@ -235,10 +316,74 @@ document.addEventListener('DOMContentLoaded', () => {
     modalManager.openModal(el.modalTask);
   }
 
+  function openCreateCategoryModal() {
+    document.getElementById('category-id').value = '';
+    document.getElementById('modal-category-title').textContent = 'Add Category';
+    document.getElementById('category-name').value = '';
+    document.getElementById('category-icon').value = 'folder';
+    document.getElementById('category-color').value = '#ff3333';
+    document.getElementById('btn-save-category').textContent = 'Create Category';
+    modalManager.openModal(el.modalCategory);
+  }
+
+  function openEditCategoryModal(catId) {
+    const cat = store.getState().categories.find(c => c.id == catId);
+    if (!cat) return;
+
+    document.getElementById('category-id').value = cat.id;
+    document.getElementById('modal-category-title').textContent = 'Edit Category';
+    document.getElementById('category-name').value = cat.name;
+    document.getElementById('category-icon').value = cat.icon || 'folder';
+    document.getElementById('category-color').value = cat.color || '#ff3333';
+    document.getElementById('btn-save-category').textContent = 'Save Changes';
+    modalManager.openModal(el.modalCategory);
+  }
+
   function openProjectModal(categoryId) {
+    document.getElementById('project-id').value = '';
     document.getElementById('project-category-id').value = categoryId;
-    el.formProject.reset();
+    document.getElementById('modal-project-title').textContent = 'Add New Project / Class';
+    document.getElementById('project-name').value = '';
+    document.getElementById('project-desc').value = '';
+    document.getElementById('project-color').value = '#ff3333';
+    document.getElementById('btn-save-project').textContent = 'Create Project';
     modalManager.openModal(el.modalProject);
+  }
+
+  function openEditProjectModal(projId, categoryId) {
+    let proj = null;
+    store.getState().categories.forEach(c => {
+      const p = (c.projects || []).find(pj => pj.id == projId);
+      if (p) proj = p;
+    });
+    if (!proj) return;
+
+    document.getElementById('project-id').value = proj.id;
+    document.getElementById('project-category-id').value = categoryId || proj.category_id;
+    document.getElementById('modal-project-title').textContent = 'Edit Project / Class';
+    document.getElementById('project-name').value = proj.name;
+    document.getElementById('project-desc').value = proj.description || '';
+    document.getElementById('project-color').value = proj.color || '#ff3333';
+    document.getElementById('btn-save-project').textContent = 'Save Changes';
+    modalManager.openModal(el.modalProject);
+  }
+
+  function openThemeModal() {
+    const modalTheme = document.getElementById('modal-theme');
+    const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-red').trim() || '#ff3333';
+
+    const customColorInput = document.getElementById('input-custom-color');
+    const customHexInput = document.getElementById('input-custom-hex');
+
+    customColorInput.value = currentAccent;
+    customHexInput.value = currentAccent;
+
+    const presets = document.querySelectorAll('input[name="theme-preset"]');
+    presets.forEach(p => {
+      p.checked = p.value.toLowerCase() === currentAccent.toLowerCase();
+    });
+
+    modalManager.openModal(modalTheme);
   }
 
   function addSubtaskRow(title = '', completed = false) {
@@ -306,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleProjectFormSubmit(e) {
     e.preventDefault();
 
+    const id = document.getElementById('project-id').value;
     const payload = {
       category_id: Number(document.getElementById('project-category-id').value),
       name: document.getElementById('project-name').value.trim(),
@@ -314,30 +460,68 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      await apiService.createProject(payload);
+      if (id) {
+        await apiService.updateProject(id, payload);
+        showToast('Project updated!');
+      } else {
+        await apiService.createProject(payload);
+        showToast('Project created!');
+      }
       modalManager.closeModal(el.modalProject);
-      showToast('Project created!');
       await loadCategories();
+      await loadTasks();
     } catch (err) {
-      showToast('Error creating project: ' + err.message);
+      showToast('Error saving project: ' + err.message);
     }
   }
 
   async function handleCategoryFormSubmit(e) {
     e.preventDefault();
 
+    const id = document.getElementById('category-id').value;
     const payload = {
       name: document.getElementById('category-name').value.trim(),
-      icon: document.getElementById('category-icon').value
+      icon: document.getElementById('category-icon').value,
+      color: document.getElementById('category-color').value
     };
 
     try {
-      await apiService.createCategory(payload);
+      if (id) {
+        await apiService.updateCategory(id, payload);
+        showToast('Category updated!');
+      } else {
+        await apiService.createCategory(payload);
+        showToast('Category created!');
+      }
       modalManager.closeModal(el.modalCategory);
-      showToast('Category created!');
       await loadCategories();
+      await loadTasks();
     } catch (err) {
-      showToast('Error creating category: ' + err.message);
+      showToast('Error saving category: ' + err.message);
+    }
+  }
+
+  async function handleSaveTheme() {
+    const selectedRadio = document.querySelector('input[name="theme-preset"]:checked');
+    const customHexInput = document.getElementById('input-custom-hex');
+    let chosenColor = customHexInput.value.trim();
+
+    if (selectedRadio) {
+      chosenColor = selectedRadio.value;
+    }
+
+    if (!/^#([0-9A-F]{3}){1,2}$/i.test(chosenColor)) {
+      showToast('Please enter a valid hex color code (e.g. #ff3333)');
+      return;
+    }
+
+    try {
+      await apiService.updateSettings({ accentColor: chosenColor });
+      applyAccentColor(chosenColor);
+      modalManager.closeModal(document.getElementById('modal-theme'));
+      showToast('Website color theme updated!');
+    } catch (err) {
+      showToast('Error saving theme: ' + err.message);
     }
   }
 
@@ -413,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
       modalManager.closeModal(el.modalImport);
       showToast('Database imported successfully!');
       pendingImportData = null;
+      await loadSettings();
       await loadCategories();
       await loadTasks();
       await loadStats();
@@ -464,15 +649,47 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Category tree clicks
+    // Category tree clicks (delegation for select, edit, delete)
     el.categoriesTree.addEventListener('click', (e) => {
       const catHeader = e.target.closest('.category-header');
       const projItem = e.target.closest('.project-item');
       const btnAddProj = e.target.closest('.btn-add-proj');
+      const btnEditCat = e.target.closest('.btn-edit-cat');
+      const btnDeleteCat = e.target.closest('.btn-delete-cat');
+      const btnEditProj = e.target.closest('.btn-edit-proj');
+      const btnDeleteProj = e.target.closest('.btn-delete-proj');
 
       if (btnAddProj) {
         e.stopPropagation();
         openProjectModal(btnAddProj.dataset.catId);
+        return;
+      }
+
+      if (btnEditCat) {
+        e.stopPropagation();
+        openEditCategoryModal(btnEditCat.dataset.catId);
+        return;
+      }
+
+      if (btnDeleteCat) {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this category? All its projects and tasks will also be deleted.')) {
+          deleteCategory(btnDeleteCat.dataset.catId);
+        }
+        return;
+      }
+
+      if (btnEditProj) {
+        e.stopPropagation();
+        openEditProjectModal(btnEditProj.dataset.projId, btnEditProj.dataset.catId);
+        return;
+      }
+
+      if (btnDeleteProj) {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this project? All its tasks will also be deleted.')) {
+          deleteProject(btnDeleteProj.dataset.projId);
+        }
         return;
       }
 
@@ -509,6 +726,44 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTasks();
       }
     });
+
+    // Theme Color Picker Event Listeners
+    if (el.btnThemeSettings) {
+      el.btnThemeSettings.addEventListener('click', openThemeModal);
+    }
+
+    const btnSaveTheme = document.getElementById('btn-save-theme');
+    if (btnSaveTheme) {
+      btnSaveTheme.addEventListener('click', handleSaveTheme);
+    }
+
+    const customColorInput = document.getElementById('input-custom-color');
+    const customHexInput = document.getElementById('input-custom-hex');
+    const presets = document.querySelectorAll('input[name="theme-preset"]');
+
+    if (customColorInput && customHexInput) {
+      customColorInput.addEventListener('input', (e) => {
+        customHexInput.value = e.target.value;
+        presets.forEach(p => { p.checked = false; });
+      });
+
+      customHexInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (/^#([0-9A-F]{3}){1,2}$/i.test(val)) {
+          customColorInput.value = val;
+        }
+        presets.forEach(p => { p.checked = p.value.toLowerCase() === val.toLowerCase(); });
+      });
+
+      presets.forEach(p => {
+        p.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            customColorInput.value = e.target.value;
+            customHexInput.value = e.target.value;
+          }
+        });
+      });
+    }
 
     // Search box debounce
     let searchDebounce;
@@ -569,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal Triggers
     document.getElementById('btn-new-task-sidebar').addEventListener('click', () => openCreateTaskModal());
     document.getElementById('btn-new-task-header').addEventListener('click', () => openCreateTaskModal());
-    document.getElementById('btn-add-category').addEventListener('click', () => modalManager.openModal(el.modalCategory));
+    document.getElementById('btn-add-category').addEventListener('click', () => openCreateCategoryModal());
 
     // Modal Close triggers
     document.querySelectorAll('[data-close]').forEach(btn => {
