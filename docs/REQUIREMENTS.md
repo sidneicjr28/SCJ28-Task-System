@@ -22,9 +22,10 @@ SCJ28 is a single-page task management web application engineered for organizing
 ## 3. Functional Requirements (FR)
 
 ### 3.1 Category & Project Management
-- **FR-01 (Category Creation)**: The system shall allow users to create top-level Categories (e.g., Academic, Personal, Work & Startups) with custom icons (`graduation-cap`, `briefcase`, `user`, `rocket`, `folder`, `code`) and color assignments.
-- **FR-02 (Project Creation)**: The system shall allow users to create Projects bound to a parent Category.
-- **FR-03 (Project Cascading Deletion)**: Deleting a Project or Category shall automatically perform a cascading delete of all associated Tasks and Subtasks.
+- **FR-01 (Category & Project CRUD)**: The system shall allow users to create, edit (name, icon, color), and delete top-level Categories and Projects in the left sidebar tree.
+- **FR-02 (Project Creation & Association)**: The system shall allow users to create and edit Projects bound to a parent Category.
+- **FR-03 (Cascading Deletion)**: Deleting a Project or Category shall automatically perform a cascading delete of all associated Tasks and Subtasks.
+- **FR-03b (Theme & Color Customization)**: The system shall allow users to change the website accent color theme (default red `#ff3333`) via a preset palette or custom hex picker, persisting choice in `settings.json`.
 
 ### 3.2 Task & Subtask Management
 - **FR-04 (Task Creation & Context Recognition)**:

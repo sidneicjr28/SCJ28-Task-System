@@ -10,8 +10,13 @@ All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. A
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/categories` | Returns categories tree with nested projects | None |
 | `POST` | `/api/categories` | Creates a new category | None |
+| `PUT` | `/api/categories/:id` | Updates an existing category | None |
+| `DELETE` | `/api/categories/:id` | Deletes a category and its nested projects & tasks | None |
 | `POST` | `/api/projects` | Creates a new project under a category | None |
+| `PUT` | `/api/projects/:id` | Updates an existing project | None |
 | `DELETE` | `/api/projects/:id` | Deletes a project and its nested tasks | None |
+| `GET` | `/api/settings` | Returns app configuration & accent color from `settings.json` | None |
+| `PUT` | `/api/settings` | Updates app configuration & accent color in `settings.json` | None |
 | `GET` | `/api/tasks` | Returns tasks list matching criteria | `category_id`, `project_id`, `status`, `filter`, `search` |
 | `POST` | `/api/tasks` | Creates a new task with optional subtasks | None |
 | `PUT` | `/api/tasks/:id` | Replaces/updates an existing task | None |
@@ -19,8 +24,8 @@ All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. A
 | `DELETE` | `/api/tasks/:id` | Deletes a task and its subtasks | None |
 | `PATCH` | `/api/subtasks/:id/toggle` | Toggles subtask completion (`0` <-> `1`) | None |
 | `GET` | `/api/stats` | Returns aggregate system statistics | None |
-| `GET` | `/api/export` | Downloads full database backup as JSON | None |
-| `POST` | `/api/import` | Imports database JSON (`mode: replace` or `merge`) | None |
+| `GET` | `/api/export` | Downloads full database & settings backup as JSON | None |
+| `POST` | `/api/import` | Imports database & settings JSON (`mode: replace` or `merge`) | None |
 
 ---
 

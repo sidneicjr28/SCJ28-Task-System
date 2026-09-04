@@ -25,7 +25,7 @@
           <img src="SCJ28-square.png" alt="SCJ28 Logo" class="app-logo">
           <div class="logo-text">
             <span class="brand-title">SCJ28</span>
-            <span class="brand-subtitle">Task System</span>
+            <span class="brand-subtitle">Task System v0.1</span>
           </div>
         </div>
       </div>
@@ -124,6 +124,11 @@
           <!-- PWA Install Button -->
           <button class="btn btn-secondary icon-btn-sm" id="btn-pwa-install" title="Install SCJ28 PWA App" style="display: none;">
             <i data-lucide="download"></i>
+          </button>
+
+          <!-- Theme Settings Button -->
+          <button class="btn btn-secondary icon-btn-sm" id="btn-theme-settings" title="Website Color Theme">
+            <i data-lucide="palette"></i>
           </button>
 
           <!-- Data Backup & Sync Menu Button -->
@@ -358,6 +363,7 @@
         <button class="modal-close" data-close="modal-project"><i data-lucide="x"></i></button>
       </div>
       <form id="form-project">
+        <input type="hidden" id="project-id">
         <input type="hidden" id="project-category-id">
         <div class="form-group">
           <label for="project-name">Project / Class Name *</label>
@@ -373,7 +379,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-project">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Project</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-project">Create Project</button>
         </div>
       </form>
     </div>
@@ -383,10 +389,11 @@
   <div class="modal" id="modal-category">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Add Category</h3>
+        <h3 id="modal-category-title">Add Category</h3>
         <button class="modal-close" data-close="modal-category"><i data-lucide="x"></i></button>
       </div>
       <form id="form-category">
+        <input type="hidden" id="category-id">
         <div class="form-group">
           <label for="category-name">Category Name *</label>
           <input type="text" id="category-name" required placeholder="e.g. Side Projects, Master's Degree">
@@ -402,9 +409,13 @@
             <option value="code">Code</option>
           </select>
         </div>
+        <div class="form-group">
+          <label for="category-color">Color</label>
+          <input type="color" id="category-color" value="#ff3333">
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-category">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Category</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-category">Create Category</button>
         </div>
       </form>
     </div>
@@ -476,6 +487,71 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-close="modal-import">Cancel</button>
         <button type="button" class="btn btn-primary" id="btn-confirm-import">Confirm Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Website Theme Color Modal -->
+  <div class="modal" id="modal-theme">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Customize Website Color Theme</h3>
+        <button class="modal-close" data-close="modal-theme"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.88rem; line-height: 1.4;">
+          Choose a preset accent color or select a custom color. This will update the primary accent color scheme across the application and save your choice in configuration.
+        </p>
+
+        <div class="theme-presets">
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#ff3333">
+            <span class="color-swatch" style="background-color: #ff3333;"></span>
+            <span>Vibrant Red (Default)</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#3b82f6">
+            <span class="color-swatch" style="background-color: #3b82f6;"></span>
+            <span>Ocean Blue</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#10b981">
+            <span class="color-swatch" style="background-color: #10b981;"></span>
+            <span>Emerald Green</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#8b5cf6">
+            <span class="color-swatch" style="background-color: #8b5cf6;"></span>
+            <span>Electric Purple</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#f59e0b">
+            <span class="color-swatch" style="background-color: #f59e0b;"></span>
+            <span>Amber Gold</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#ec4899">
+            <span class="color-swatch" style="background-color: #ec4899;"></span>
+            <span>Neon Pink</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-preset" value="#14b8a6">
+            <span class="color-swatch" style="background-color: #14b8a6;"></span>
+            <span>Cyber Teal</span>
+          </label>
+        </div>
+
+        <div class="form-group" style="margin-top: 18px;">
+          <label for="input-custom-color">Custom Accent Color</label>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
+            <input type="color" id="input-custom-color" value="#ff3333" style="width: 48px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: none;">
+            <input type="text" id="input-custom-hex" value="#ff3333" placeholder="#ff3333" style="flex: 1;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-theme">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-theme">Save Theme</button>
       </div>
     </div>
   </div>

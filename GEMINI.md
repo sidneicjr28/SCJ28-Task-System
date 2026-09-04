@@ -102,15 +102,20 @@ SCJ28/
 
 ## Development & Execution Rules
 
+## Development & Execution Rules
+
 1. **Server Execution**:
    - Quick launch script (Linux/macOS): `./run.sh` (starts server on port 2800 and opens browser automatically)
    - Quick launch script (Windows): `run.bat` or `run.cmd`
    - Direct node command: `node server.js`
-   - Access web app: `http://localhost:2800`
+   - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.1)
 
 2. **API Conventions**:
    - All REST API routes are prefixed with `/api/`.
    - `GET /api/categories` - Returns categories tree with nested projects.
+   - `POST / PUT / DELETE /api/categories` - Full CRUD for categories.
+   - `POST / PUT / DELETE /api/projects` - Full CRUD for projects under categories.
+   - `GET /api/settings` & `PUT /api/settings` - Fetches and saves website accent color theme in `settings.json`.
    - `GET /api/tasks` - Supports query parameters: `category_id`, `project_id`, `status`, `filter` (`today`, `upcoming`, `overdue`), `search`.
    - `POST / PUT / DELETE /api/tasks` - Full CRUD with nested `subtasks` array.
    - `PATCH /api/subtasks/:id/toggle` - Checkmark toggle handler.
