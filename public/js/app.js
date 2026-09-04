@@ -3,6 +3,7 @@
 import { store } from './state/store.js';
 import { apiService } from './services/apiService.js';
 import { notificationService } from './services/notificationService.js';
+import { pwaService } from './services/pwaService.js';
 import { modalManager } from './ui/modalManager.js';
 import { showToast, escapeHtml } from './ui/toast.js';
 
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function init() {
     setupEventListeners();
     notificationService.init();
+    pwaService.init();
 
     // Subscribe store listener to auto-render current view when state changes
     store.subscribe(() => renderCurrentView());
