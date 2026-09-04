@@ -81,7 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Subscribe store listener to auto-render current view when state changes
     store.subscribe(() => renderCurrentView());
 
+    const savedOpacity = localStorage.getItem('scj28_panel_opacity') || 65;
+    applyPanelOpacity(savedOpacity);
+
     await loadSettings();
+    await loadBackgroundImage();
     await loadCategories();
     await loadTasks();
     await loadStats();
@@ -119,6 +123,25 @@ document.addEventListener('DOMContentLoaded', () => {
     root.style.setProperty('--p1-color', hex);
   }
 
+  function applyPanelOpacity(opacityVal) {
+    let val = parseInt(opacityVal, 10);
+    if (isNaN(val)) val = 65;
+    val = Math.min(100, Math.max(60, val));
+
+    const panelOpacityDec = (val / 100).toFixed(2);
+    // Relative overlay for inner items to keep them transparent & 2% darker overall relative to panel
+    const relativeItemOpacity = (0.06 * (val / 65)).toFixed(2);
+
+    document.documentElement.style.setProperty('--panel-opacity', panelOpacityDec);
+    document.documentElement.style.setProperty('--item-opacity', relativeItemOpacity);
+    localStorage.setItem('scj28_panel_opacity', val.toString());
+
+    const opacityInput = document.getElementById('input-bkg-opacity');
+    const opacityBadge = document.getElementById('opacity-val-badge');
+    if (opacityInput) opacityInput.value = val;
+    if (opacityBadge) opacityBadge.textContent = `${val}%`;
+  }
+
   // ----------------------------------------------------
   // Data Loaders
   // ----------------------------------------------------
@@ -132,6 +155,65 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Error loading settings:', err);
+    }
+  }
+
+  async function loadBackgroundImage() {
+    try {
+      const data = await apiService.getBackground();
+      const bkgWrapper = document.getElementById('bkg-preview-wrapper');
+      const bkgImg = document.getElementById('bkg-preview-img');
+      const btnRemove = document.getElementById('btn-remove-bkg');
+
+      if (data && data.imageUrl) {
+        const timestampedUrl = `${data.imageUrl}?t=${Date.now()}`;
+        document.body.style.backgroundImage = `url("${timestampedUrl}")`;
+        if (bkgImg) bkgImg.src = timestampedUrl;
+        if (bkgWrapper) bkgWrapper.style.display = 'block';
+        if (btnRemove) btnRemove.style.display = 'inline-flex';
+      } else {
+        document.body.style.backgroundImage = 'none';
+        if (bkgImg) bkgImg.src = '';
+        if (bkgWrapper) bkgWrapper.style.display = 'none';
+        if (btnRemove) btnRemove.style.display = 'none';
+      }
+    } catch (err) {
+      console.error('Error loading background image:', err);
+    }
+  }
+
+  async function handleBkgFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const base64Data = event.target.result;
+        showToast('Uploading background image...');
+        await apiService.uploadBackground({ image: base64Data, filename: file.name });
+        await loadBackgroundImage();
+        showToast('Background image applied successfully!');
+      } catch (err) {
+        showToast('Error uploading background image: ' + err.message);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  async function handleRemoveBkg() {
+    try {
+      await apiService.removeBackground();
+      await loadBackgroundImage();
+      showToast('Background image removed.');
+    } catch (err) {
+      showToast('Error removing background image: ' + err.message);
     }
   }
 
@@ -382,6 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
     presets.forEach(p => {
       p.checked = p.value.toLowerCase() === currentAccent.toLowerCase();
     });
+
+    const savedOpacity = localStorage.getItem('scj28_panel_opacity') || 65;
+    applyPanelOpacity(savedOpacity);
 
     modalManager.openModal(modalTheme);
   }
@@ -763,6 +848,26 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       });
+    }
+
+    // Opacity & Background Image Event Listeners
+    const inputOpacity = document.getElementById('input-bkg-opacity');
+    if (inputOpacity) {
+      inputOpacity.addEventListener('input', (e) => {
+        applyPanelOpacity(e.target.value);
+      });
+    }
+
+    const btnSelectBkg = document.getElementById('btn-select-bkg');
+    const inputBkgFile = document.getElementById('input-bkg-file');
+    const btnRemoveBkg = document.getElementById('btn-remove-bkg');
+
+    if (btnSelectBkg && inputBkgFile) {
+      btnSelectBkg.addEventListener('click', () => inputBkgFile.click());
+      inputBkgFile.addEventListener('change', handleBkgFileSelect);
+    }
+    if (btnRemoveBkg) {
+      btnRemoveBkg.addEventListener('click', handleRemoveBkg);
     }
 
     // Search box debounce

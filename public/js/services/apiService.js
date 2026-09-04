@@ -161,5 +161,29 @@ export const apiService = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to import backup');
     return data;
+  },
+
+  async getBackground() {
+    const res = await fetch('/api/background');
+    if (!res.ok) throw new Error('Failed to fetch background image info');
+    return res.json();
+  },
+
+  async uploadBackground(payload) {
+    const res = await fetch('/api/background', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to upload background image');
+    return data;
+  },
+
+  async removeBackground() {
+    const res = await fetch('/api/background', { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to remove background image');
+    return data;
   }
 };

@@ -25,7 +25,7 @@
           <img src="SCJ28-square.png" alt="SCJ28 Logo" class="app-logo">
           <div class="logo-text">
             <span class="brand-title">SCJ28</span>
-            <span class="brand-subtitle">Task System v0.1</span>
+            <span class="brand-subtitle">Task System v0.2</span>
           </div>
         </div>
       </div>
@@ -467,7 +467,7 @@
       </div>
       <div class="modal-body" style="padding: 16px 0;">
         <p style="margin-bottom: 12px; color: var(--text-main);">Select how you want to import data from <strong id="import-filename">backup.json</strong>:</p>
-        <div id="import-summary" style="font-size: 0.85rem; color: var(--text-muted); background: #111; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+        <div id="import-summary" style="font-size: 0.85rem; color: var(--text-muted); background: rgba(0, 0, 0, var(--panel-opacity)); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; margin-bottom: 16px;">
           <!-- Dynamic summary -->
         </div>
         <div class="form-group">
@@ -546,6 +546,48 @@
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
             <input type="color" id="input-custom-color" value="#ff3333" style="width: 48px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: none;">
             <input type="text" id="input-custom-hex" value="#ff3333" placeholder="#ff3333" style="flex: 1;">
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <div class="form-group">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label for="input-bkg-opacity" style="font-weight: 600; color: var(--text-main); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="sliders"></i> Panel Dark Opacity
+            </label>
+            <span id="opacity-val-badge" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-red); background: rgba(255, 51, 51, 0.15); padding: 2px 8px; border-radius: 6px;">65%</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; margin-bottom: 8px; line-height: 1.4;">
+            Adjust panel dark transparency globally between 60% and 100%.
+          </p>
+          <input type="range" id="input-bkg-opacity" min="60" max="100" value="65" style="width: 100%; accent-color: var(--accent-red); cursor: pointer;">
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: var(--text-main); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="image"></i> Custom Background Image
+          </label>
+          <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; margin-bottom: 12px; line-height: 1.4;">
+            Upload an image to display behind dark translucent blurred UI panels. Stored in <code>bkg-image</code> subfolder.
+          </p>
+
+          <div id="bkg-preview-wrapper" style="display: none; margin-bottom: 12px;">
+            <div style="position: relative; width: 100%; height: 120px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
+              <img id="bkg-preview-img" src="" alt="Background Preview" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="file" id="input-bkg-file" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-select-bkg">
+              <i data-lucide="upload"></i> Upload Image
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-remove-bkg" style="display: none; color: var(--accent-red); border-color: var(--accent-red);">
+              <i data-lucide="trash-2"></i> Remove Image
+            </button>
           </div>
         </div>
       </div>

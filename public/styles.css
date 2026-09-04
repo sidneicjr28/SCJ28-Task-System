@@ -1,27 +1,30 @@
 /* SCJ28 Minimalist Modern Black/White/Red Theme */
 
 :root {
+  --panel-opacity: 0.65;
+  --item-opacity: 0.06;
   --bg-main: #0a0a0a;
-  --bg-sidebar: #111111;
-  --bg-card: #161616;
-  --bg-card-hover: #1f1f1f;
-  --bg-input: #1c1c1c;
-  --bg-modal: #141414;
-  --border-color: #262626;
+  --bg-sidebar: rgba(0, 0, 0, var(--panel-opacity));
+  --bg-card: rgba(0, 0, 0, var(--item-opacity));
+  --bg-card-hover: rgba(0, 0, 0, calc(var(--item-opacity) + 0.04));
+  --bg-input: rgba(0, 0, 0, var(--item-opacity));
+  --bg-modal: rgba(0, 0, 0, var(--panel-opacity));
+  --border-color: rgba(255, 255, 255, 0.12);
   --border-focus: #ff3333;
+  --backdrop-blur: blur(12px) saturate(180%);
   
   --text-main: #f5f5f5;
-  --text-muted: #888888;
+  --text-muted: #aaaaaa;
   --text-dark: #111111;
 
   --accent-red: #ff3333;
   --accent-red-hover: #e02424;
-  --accent-red-glow: rgba(255, 51, 51, 0.15);
+  --accent-red-glow: rgba(255, 51, 51, 0.2);
 
   --p1-color: #ff3333;
   --p2-color: #e05555;
-  --p3-color: #888888;
-  --p4-color: #444444;
+  --p3-color: #aaaaaa;
+  --p4-color: #666666;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -40,6 +43,10 @@
 
 body {
   background-color: var(--bg-main);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.5;
   overflow: hidden;
@@ -52,7 +59,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-main);
+  background: rgba(0, 0, 0, 0.4);
 }
 ::-webkit-scrollbar-thumb {
   background: #333333;
@@ -68,12 +75,15 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background: transparent;
 }
 
 /* Sidebar */
 .sidebar {
   width: 280px;
   background-color: var(--bg-sidebar);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -186,7 +196,8 @@ body {
 .badge {
   margin-left: auto;
   font-size: 0.75rem;
-  background-color: #222222;
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  border: 1px solid var(--border-color);
   color: var(--text-muted);
   padding: 2px 8px;
   border-radius: 10px;
@@ -288,7 +299,7 @@ body {
 }
 
 .project-item.active {
-  background-color: #1e1e1e;
+  background-color: rgba(255, 255, 255, 0.12);
   color: var(--text-main);
   font-weight: 600;
   border-left: 2px solid var(--accent-red);
@@ -315,6 +326,8 @@ body {
   gap: 10px;
   padding: 10px 12px;
   background-color: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -356,6 +369,8 @@ body {
   align-items: center;
   gap: 14px;
   background-color: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   padding: 14px;
   border-radius: var(--radius-md);
@@ -400,7 +415,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-main);
+  background-color: transparent;
   overflow: hidden;
 }
 
@@ -412,6 +427,8 @@ body {
   padding: 16px 24px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-sidebar);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   gap: 16px;
 }
 
@@ -438,16 +455,28 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
 }
 
 .search-box {
   position: relative;
   display: flex;
   align-items: center;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border-radius: var(--radius-sm);
 }
 
 .search-box input[type="text"] {
-  background-color: var(--bg-input);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-main);
@@ -480,7 +509,9 @@ body {
 
 .view-toggle {
   display: flex;
-  background-color: var(--bg-input);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   padding: 3px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
@@ -519,12 +550,16 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   padding: 16px 24px;
-  background-color: var(--bg-main);
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-bottom: 1px solid var(--border-color);
 }
 
 .stat-card {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 12px 16px;
@@ -541,12 +576,14 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
 }
 
-.icon-total { background-color: rgba(255, 255, 255, 0.05); color: #ffffff; }
-.icon-pending { background-color: rgba(255, 170, 0, 0.1); color: #ffaa00; }
-.icon-overdue { background-color: var(--accent-red-glow); color: var(--accent-red); }
-.icon-completed { background-color: rgba(0, 204, 102, 0.1); color: #00cc66; }
+.icon-total { background-color: rgba(0, 0, 0, var(--item-opacity)); border: 1px solid var(--border-color); color: #ffffff; }
+.icon-pending { background-color: rgba(255, 170, 0, 0.15); border: 1px solid rgba(255, 170, 0, 0.3); color: #ffaa00; }
+.icon-overdue { background-color: var(--accent-red-glow); border: 1px solid var(--accent-red); color: var(--accent-red); }
+.icon-completed { background-color: rgba(0, 204, 102, 0.15); border: 1px solid rgba(0, 204, 102, 0.3); color: #00cc66; }
 
 .stat-info {
   display: flex;
@@ -570,6 +607,9 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
 }
 
 .view-pane {
@@ -586,6 +626,12 @@ body {
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
 }
 
 .filter-group {
@@ -597,7 +643,7 @@ body {
 }
 
 .filter-group select {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 6px 10px;
@@ -614,6 +660,8 @@ body {
 /* Task Card */
 .task-card {
   background-color: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -625,7 +673,7 @@ body {
 }
 
 .task-card:hover {
-  border-color: #383838;
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }
 
@@ -688,8 +736,14 @@ body {
 .task-desc {
   font-size: 0.85rem;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 6px;
   white-space: pre-wrap;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
 }
 
 .task-meta {
@@ -721,8 +775,8 @@ body {
 
 .p-badge-1 { background-color: var(--accent-red-glow); color: var(--accent-red); border: 1px solid var(--accent-red); }
 .p-badge-2 { background-color: rgba(224, 85, 85, 0.15); color: var(--p2-color); border: 1px solid var(--p2-color); }
-.p-badge-3 { background-color: #262626; color: var(--text-main); }
-.p-badge-4 { background-color: #1a1a1a; color: var(--text-muted); }
+.p-badge-3 { background-color: rgba(0, 0, 0, var(--panel-opacity)); color: var(--text-main); border: 1px solid var(--border-color); }
+.p-badge-4 { background-color: rgba(0, 0, 0, var(--panel-opacity)); color: var(--text-muted); border: 1px solid var(--border-color); }
 
 .due-overdue {
   color: var(--accent-red);
@@ -730,7 +784,8 @@ body {
 }
 
 .project-tag {
-  background-color: #222222;
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 2px 8px;
   border-radius: 12px;
@@ -757,7 +812,8 @@ body {
   flex: 1;
   max-width: 150px;
   height: 5px;
-  background-color: #262626;
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -787,7 +843,7 @@ body {
 
 .subtask-item-inline.done {
   text-decoration: line-through;
-  color: #555555;
+  color: #888888;
 }
 
 /* Kanban Board View */
@@ -799,7 +855,9 @@ body {
 }
 
 .kanban-column {
-  background-color: var(--bg-sidebar);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   display: flex;
@@ -825,7 +883,8 @@ body {
 }
 
 .kanban-count {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  border: 1px solid var(--border-color);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 0.75rem;
@@ -843,7 +902,9 @@ body {
 }
 
 .kanban-card {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 12px;
@@ -864,6 +925,12 @@ body {
   justify-content: center;
   gap: 16px;
   margin-bottom: 16px;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
 }
 
 .calendar-grid-header {
@@ -873,8 +940,12 @@ body {
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--text-muted);
-  padding-bottom: 8px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border-radius: var(--radius-sm);
 }
 
 .calendar-grid {
@@ -885,7 +956,9 @@ body {
 }
 
 .cal-day {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   min-height: 90px;
@@ -896,8 +969,11 @@ body {
 }
 
 .cal-day.empty {
-  background: none;
-  border: none;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  opacity: 0.5;
 }
 
 .cal-day.today {
@@ -915,7 +991,10 @@ body {
 }
 
 .cal-task-pill {
-  background-color: #222222;
+  background-color: rgba(0, 0, 0, var(--item-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
   border-left: 2px solid var(--accent-red);
   padding: 2px 4px;
   border-radius: 2px;
@@ -953,13 +1032,15 @@ body {
 
 .btn-secondary {
   background-color: var(--bg-input);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
   background-color: var(--bg-card-hover);
-  border-color: #444444;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .btn-block {
@@ -984,7 +1065,7 @@ body {
 }
 
 .icon-btn-sm:hover {
-  background-color: var(--bg-card);
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--text-main);
 }
 
@@ -996,8 +1077,9 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -1009,15 +1091,24 @@ body {
 
 .modal-content {
   background-color: var(--bg-modal);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  width: 100%;
+  width: 90%;
   max-width: 500px;
+  max-height: 75vh;
+  overflow-y: auto;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+#modal-theme .modal-content {
+  max-height: 75vh;
+  overflow-y: auto;
 }
 
 .modal-lg {
@@ -1067,6 +1158,8 @@ input[type="datetime-local"],
 select,
 textarea {
   background-color: var(--bg-input);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 10px 12px;
@@ -1106,6 +1199,10 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: 8px;
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
 }
 
 .subtask-editor-row input[type="text"] {
@@ -1114,7 +1211,9 @@ input:focus, select:focus, textarea:focus {
 
 /* Notification Banner */
 .notification-banner {
-  background-color: var(--accent-red-glow);
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--accent-red);
   border-radius: var(--radius-md);
   padding: 12px 18px;
@@ -1152,7 +1251,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 .toast {
-  background-color: var(--bg-card);
+  background-color: rgba(0, 0, 0, var(--panel-opacity));
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--accent-red);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
@@ -1170,29 +1271,84 @@ input:focus, select:focus, textarea:focus {
   to { transform: translateX(0); opacity: 1; }
 }
 
-@media (max-width: 768px) {
+/* Responsiveness: Half Desktop & Medium Screens (<= 1100px) */
+@media (max-width: 1100px) {
+  .sidebar {
+    width: 230px;
+  }
+  
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .search-box input[type="text"] {
+    width: 140px;
+  }
+
+  .search-box input[type="text"]:focus {
+    width: 190px;
+  }
+
+  .top-bar {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .view-filters-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* Medium / Split Desktop & Mobile Screens (<= 900px) */
+@media (max-width: 900px) {
   .sidebar {
     position: fixed;
     left: -280px;
     top: 0;
     bottom: 0;
+    width: 260px;
     z-index: 900;
     transition: left var(--transition-normal);
   }
+
   .sidebar.mobile-open {
     left: 0;
   }
+
   .mobile-toggle {
     display: block;
   }
+
   .hide-mobile {
     display: none;
   }
+
   .kanban-board {
     grid-template-columns: 1fr;
     height: auto;
   }
+
   .stats-bar {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modal-content,
+  #modal-theme .modal-content {
+    width: 92%;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 18px;
   }
 }
