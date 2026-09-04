@@ -1,11 +1,12 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'tasks.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'tasks.db');
 const db = new Database(dbPath);
 
-// Enable foreign keys
+// Enable foreign keys and WAL mode for multi-process concurrency
 db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
 
 function initDb() {
   db.exec(`
