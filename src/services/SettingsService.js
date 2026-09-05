@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const settingsPath = path.join(__dirname, '../../settings.json');
+const settingsPath = path.join(process.cwd(), 'settings.json');
 
 const defaultSettings = {
   accentColor: '#ff3333'

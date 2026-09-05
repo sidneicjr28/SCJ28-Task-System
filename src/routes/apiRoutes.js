@@ -9,6 +9,7 @@ const statsController = require('../controllers/StatsController');
 const settingsController = require('../controllers/SettingsController');
 const backgroundController = require('../controllers/BackgroundController');
 const diaryController = require('../controllers/DiaryController');
+const githubController = require('../controllers/GitHubController');
 
 // Categories & Projects
 router.get('/categories', (req, res) => categoryController.getCategories(req, res));
@@ -51,5 +52,15 @@ router.delete('/background', (req, res) => backgroundController.deleteBackground
 // Import & Export
 router.get('/export', (req, res) => backupController.exportBackup(req, res));
 router.post('/import', (req, res) => backupController.importBackup(req, res));
+
+// GitHub Routes
+router.get('/github/auth', (req, res) => githubController.getAuthUrl(req, res));
+router.get('/github/callback', (req, res) => githubController.handleCallback(req, res));
+router.get('/github/status', (req, res) => githubController.getStatus(req, res));
+router.post('/github/disconnect', (req, res) => githubController.disconnect(req, res));
+router.post('/github/config', (req, res) => githubController.saveConfig(req, res));
+router.get('/github/projects/:projectId/board', (req, res) => githubController.getBoardData(req, res));
+router.post('/github/projects/:projectId/issues', (req, res) => githubController.createIssue(req, res));
+router.post('/github/projects/:projectId/import-task', (req, res) => githubController.importTask(req, res));
 
 module.exports = router;

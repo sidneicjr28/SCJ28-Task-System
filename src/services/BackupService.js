@@ -61,8 +61,8 @@ class BackupService {
 
       // 2. Projects
       const projectIdMap = new Map();
-      const insertProjWithId = db.prepare('INSERT INTO projects (id, category_id, name, description, color, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-      const insertProjAuto = db.prepare('INSERT INTO projects (category_id, name, description, color, created_at) VALUES (?, ?, ?, ?, ?)');
+      const insertProjWithId = db.prepare('INSERT INTO projects (id, category_id, name, description, color, github_repo, github_project_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertProjAuto = db.prepare('INSERT INTO projects (category_id, name, description, color, github_repo, github_project_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
       const getProjByNameCat = db.prepare('SELECT id FROM projects WHERE category_id = ? AND name = ?');
 
       for (const proj of projects) {
@@ -70,14 +70,14 @@ class BackupService {
         if (!mappedCatId) continue;
 
         if (mode === 'replace' && proj.id) {
-          insertProjWithId.run(proj.id, mappedCatId, proj.name, proj.description || '', proj.color || '#ffffff', proj.created_at || new Date().toISOString());
+          insertProjWithId.run(proj.id, mappedCatId, proj.name, proj.description || '', proj.color || '#ffffff', proj.github_repo || null, proj.github_project_id || null, proj.created_at || new Date().toISOString());
           projectIdMap.set(proj.id, proj.id);
         } else {
           let existing = getProjByNameCat.get(mappedCatId, proj.name);
           if (existing) {
             projectIdMap.set(proj.id, existing.id);
           } else {
-            const info = insertProjAuto.run(mappedCatId, proj.name, proj.description || '', proj.color || '#ffffff', proj.created_at || new Date().toISOString());
+            const info = insertProjAuto.run(mappedCatId, proj.name, proj.description || '', proj.color || '#ffffff', proj.github_repo || null, proj.github_project_id || null, proj.created_at || new Date().toISOString());
             projectIdMap.set(proj.id, info.lastInsertRowid);
           }
         }
@@ -85,8 +85,8 @@ class BackupService {
 
       // 3. Tasks
       const taskIdMap = new Map();
-      const insertTaskWithId = db.prepare('INSERT INTO tasks (id, project_id, title, description, due_date, priority, status, reminder_frequency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      const insertTaskAuto = db.prepare('INSERT INTO tasks (project_id, title, description, due_date, priority, status, reminder_frequency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertTaskWithId = db.prepare('INSERT INTO tasks (id, project_id, title, description, due_date, priority, status, reminder_frequency, github_issue_id, github_issue_number, github_issue_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertTaskAuto = db.prepare('INSERT INTO tasks (project_id, title, description, due_date, priority, status, reminder_frequency, github_issue_id, github_issue_number, github_issue_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
       for (const task of tasks) {
         const mappedProjId = projectIdMap.get(task.project_id) || task.project_id;
@@ -94,10 +94,10 @@ class BackupService {
 
         const remFreq = task.reminder_frequency || 'smart';
         if (mode === 'replace' && task.id) {
-          insertTaskWithId.run(task.id, mappedProjId, task.title, task.description || '', task.due_date || null, task.priority || 3, task.status || 'todo', remFreq, task.created_at || new Date().toISOString(), task.updated_at || new Date().toISOString());
+          insertTaskWithId.run(task.id, mappedProjId, task.title, task.description || '', task.due_date || null, task.priority || 3, task.status || 'todo', remFreq, task.github_issue_id || null, task.github_issue_number || null, task.github_issue_url || null, task.created_at || new Date().toISOString(), task.updated_at || new Date().toISOString());
           taskIdMap.set(task.id, task.id);
         } else {
-          const info = insertTaskAuto.run(mappedProjId, task.title, task.description || '', task.due_date || null, task.priority || 3, task.status || 'todo', remFreq, task.created_at || new Date().toISOString(), task.updated_at || new Date().toISOString());
+          const info = insertTaskAuto.run(mappedProjId, task.title, task.description || '', task.due_date || null, task.priority || 3, task.status || 'todo', remFreq, task.github_issue_id || null, task.github_issue_number || null, task.github_issue_url || null, task.created_at || new Date().toISOString(), task.updated_at || new Date().toISOString());
           taskIdMap.set(task.id, info.lastInsertRowid);
         }
       }
