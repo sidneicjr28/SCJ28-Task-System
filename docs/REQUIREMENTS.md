@@ -26,7 +26,7 @@ SCJ28 is a single-page task & diary management web application engineered for or
 - **FR-01 (Category & Project CRUD)**: The system shall allow users to create, edit (name, icon, color), and delete top-level Categories and Projects in the left sidebar tree.
 - **FR-02 (Project Creation & Association)**: The system shall allow users to create and edit Projects bound to a parent Category.
 - **FR-03 (Cascading Deletion)**: Deleting a Project or Category shall automatically perform a cascading delete of all associated Tasks, Subtasks, Diaries, and Diary Task links.
-- **FR-03b (Theme & Color Customization)**: The system shall allow users to change the website accent color theme (default red `#ff3333`) via a preset palette or custom hex picker, persisting choice in `settings.json`.
+- **FR-03b (Application Settings & Theme Pop-Up)**: The system shall provide a fixed-dimension Application Settings modal (`#modal-theme`, 720x480px) triggered by a settings icon (`<i data-lucide="settings"></i>`) in the navbar. The settings modal shall organize configuration options into vertical tabs on the left sidebar (`Theme & Accent`, `Panel Opacity`, `Background`, `GitHub OAuth`), enabling users to customize accent colors, adjust dark panel opacity, upload custom wallpaper images, and configure GitHub OAuth credentials with a styled password field and show/hide visibility toggle button without modal resizing.
 
 ### 3.2 Task & Subtask Management
 - **FR-04 (Task Creation & Context Recognition)**:

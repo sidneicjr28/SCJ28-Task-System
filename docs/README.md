@@ -7,7 +7,7 @@ Welcome to the **SCJ28 Developer Documentation** (v0.3.2). This documentation su
 ## 📚 Documentation Index
 
 1. [**Requirements Specification (`REQUIREMENTS.md`)**](./REQUIREMENTS.md)
-   - Functional requirements (Task management, Smart filtering, Project & Class Diaries, Clipboard Image Uploads, Compact Card Expansion, Import/Export, Desktop Notifications).
+   - Functional requirements (Task management, Smart filtering, Project & Class Diaries, Clipboard Image Uploads, Compact Card Expansion, Import/Export, Tabbed Settings Pop-up, Desktop Notifications).
    - Non-functional requirements (Performance, Storage, Security, UI Design System).
 
 2. [**Use Cases & User Flows (`USE_CASES.md`)**](./USE_CASES.md)

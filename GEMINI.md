@@ -151,8 +151,8 @@ SCJ28/
    - Global panel opacity slider (60%–100%) saved in `localStorage` (`scj28_panel_opacity`).
    - Inner cards and divs remain transparent with a 2% relative dark overlay.
    - Background images are stored in `./bkg-image/` and excluded from `tasks.db` and JSON backup exports.
-   - Theme customization modal features a scrollable `75vh` height and responsive half-desktop split-screen layout support.
-   - Ensure form input icons have `z-index: 2`, `pointer-events: none`, and proper left padding on the input text box (`padding-left: 38px`).
+   - Settings pop-up modal is opened via top navbar settings icon (`<i data-lucide="settings"></i>`) and features a fixed pop-up size (720x480px) with vertical left sidebar tab navigation (`Theme & Accent`, `Panel Opacity`, `Background`, `GitHub OAuth`) and responsive mobile/desktop support.
+   - Form input text & password fields (`input[type="password"]`) include proper left padding (`padding-left: 38px`) for input icons (`z-index: 2`, `pointer-events: none`) and interactive password toggle visibility buttons.
    - Keep code dependency-light: pure HTML5, vanilla CSS, and standard ES6 JavaScript.
 
 ---

@@ -164,3 +164,23 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
    - System updates task lists and displays toast notification.
 6. **Quick Issue Creation**: User clicks "New Issue", fills in title/description/labels, and submits. System posts issue to GitHub via API and refreshes the board.
 
+---
+
+## UC-09: Customize Application Settings via Tabbed Pop-up
+
+- **Primary Actor**: User
+- **Description**: The user opens the Application Settings modal using the top navbar settings icon to configure website theme accent colors, dark panel opacity, wallpaper background image, and GitHub OAuth credentials.
+- **Preconditions**: User is on the SCJ28 web interface.
+
+### Main Success Flow
+1. User clicks the Settings icon (`<i data-lucide="settings"></i>`) in the top navbar header (`#btn-theme-settings`).
+2. System opens the fixed-size `#modal-theme` pop-up window (720x480px) featuring a left sidebar with 4 vertical tab buttons (`Theme & Accent`, `Panel Opacity`, `Background`, `GitHub OAuth`).
+3. User clicks any vertical tab button on the left sidebar to swap the active setting pane on the right:
+   - **Theme & Accent**: User selects a color swatch preset or enters a custom hex code.
+   - **Panel Opacity**: User drags the opacity slider between 60% and 100% to live-update global panel translucency.
+   - **Background**: User uploads or removes a custom background wallpaper image.
+   - **GitHub OAuth**: User enters GitHub Client ID and Client Secret, using the eye icon toggle button to reveal or mask the secret.
+4. User clicks "Save Settings".
+5. System saves configurations to `settings.json` and `localStorage`, updates CSS variables, closes modal, and shows a success toast ("Settings saved successfully!").
+
+
