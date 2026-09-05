@@ -151,7 +151,7 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
 
 ### Main Success Flow
 1. User selects a project from the sidebar and clicks the **GitHub Board** sub-tab.
-2. **Repository Linkage**: User clicks "Link GitHub Repo" and enters `owner/repository`.
+2. **Repository Linkage & Persistence**: User clicks "Link GitHub Repo" or edits the project to enter `owner/repository` and optional board ID. The system submits a `PUT /api/projects/:id` request and permanently updates the `github_repo` and `github_project_id` columns in the `projects` table inside `tasks.db`.
 3. **OAuth Authentication**: User clicks "Connect GitHub Account":
    - System calls `/api/github/auth` and opens GitHub's OAuth login popup window.
    - User grants authorization on GitHub.com.

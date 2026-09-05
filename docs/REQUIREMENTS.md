@@ -59,7 +59,7 @@ SCJ28 is a single-page task & diary management web application engineered for or
   - The backup options and import modals explicitly instruct users that JSON files contain all database records, while uploaded images (`./uploads/diary-images/`) must be manually backed up separately from the server directory if desired.
 
 ### 3.6 GitHub Integration & Live Board Subsystem
-- **FR-17 (GitHub Repository & Project Linkage)**: The system shall allow users to link a SCJ28 Project to a GitHub repository (`owner/repository`) and optional GitHub Project (v2) Board ID.
+- **FR-17 (GitHub Repository & Project Linkage & Database Persistence)**: The system shall allow users to link a SCJ28 Project to a GitHub repository (`owner/repository`) and optional GitHub Project (v2) Board ID via either the dedicated "Connect GitHub Repository" modal or the Project Creation/Edit modal. Connection details (`github_repo`, `github_project_id`) are permanently persisted in the SQLite `projects` database table.
 - **FR-18 (GitHub OAuth 2.0 Authentication)**: The system shall support user account authorization via GitHub OAuth 2.0 flow (`/api/github/auth`, `/api/github/callback`), persisting client credentials safely in `.env`.
 - **FR-19 (Live Glassmorphic GitHub Kanban Board)**: The `GitHub Board` sub-tab shall render real-time repository issues across status columns (*To Do*, *In Progress*, *Done*) displaying issue numbers (`#123`), label tags, assignees, and GitHub HTML links.
 - **FR-20 (On-Demand Task Import)**: Users shall be able to import live GitHub issues as local SCJ28 database tasks (`tasks.db`), preserving issue numbers and links.

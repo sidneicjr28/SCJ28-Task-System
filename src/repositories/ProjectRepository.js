@@ -22,15 +22,25 @@ class ProjectRepository {
     return this.findById(info.lastInsertRowid);
   }
 
-  update(id, { category_id, name, description, color, github_repo, github_project_id }) {
+  update(id, fields = {}) {
+    const existing = this.findById(id);
+    if (!existing) return null;
+
+    const category_id = fields.category_id !== undefined ? fields.category_id : existing.category_id;
+    const name = fields.name !== undefined ? fields.name : existing.name;
+    const description = fields.description !== undefined ? fields.description : existing.description;
+    const color = fields.color !== undefined ? fields.color : existing.color;
+    const github_repo = fields.github_repo !== undefined ? (fields.github_repo || null) : existing.github_repo;
+    const github_project_id = fields.github_project_id !== undefined ? (fields.github_project_id || null) : existing.github_project_id;
+
     const stmt = db.prepare(`
       UPDATE projects
-      SET category_id = COALESCE(?, category_id),
-          name = COALESCE(?, name),
-          description = COALESCE(?, description),
-          color = COALESCE(?, color),
-          github_repo = COALESCE(?, github_repo),
-          github_project_id = COALESCE(?, github_project_id)
+      SET category_id = ?,
+          name = ?,
+          description = ?,
+          color = ?,
+          github_repo = ?,
+          github_project_id = ?
       WHERE id = ?
     `);
     stmt.run(category_id, name, description, color, github_repo, github_project_id, id);
