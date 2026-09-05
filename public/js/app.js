@@ -666,6 +666,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('project-name').value = '';
     document.getElementById('project-desc').value = '';
     document.getElementById('project-color').value = '#ff3333';
+    const inputGhRepo = document.getElementById('project-github-repo');
+    const inputGhProjId = document.getElementById('project-github-project-id');
+    if (inputGhRepo) inputGhRepo.value = '';
+    if (inputGhProjId) inputGhProjId.value = '';
     document.getElementById('btn-save-project').textContent = 'Create Project';
     modalManager.openModal(el.modalProject);
   }
@@ -684,6 +688,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('project-name').value = proj.name;
     document.getElementById('project-desc').value = proj.description || '';
     document.getElementById('project-color').value = proj.color || '#ff3333';
+    const inputGhRepo = document.getElementById('project-github-repo');
+    const inputGhProjId = document.getElementById('project-github-project-id');
+    if (inputGhRepo) inputGhRepo.value = proj.github_repo || '';
+    if (inputGhProjId) inputGhProjId.value = proj.github_project_id || '';
     document.getElementById('btn-save-project').textContent = 'Save Changes';
     modalManager.openModal(el.modalProject);
   }
@@ -761,13 +769,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = document.getElementById('project-name').value.trim();
     const description = document.getElementById('project-desc').value.trim();
     const color = document.getElementById('project-color').value;
+    const github_repo = document.getElementById('project-github-repo')?.value.trim() || null;
+    const github_project_id = document.getElementById('project-github-project-id')?.value.trim() || null;
 
     try {
       if (projId) {
-        await apiService.updateProject(projId, { name, description, color });
+        await apiService.updateProject(projId, { name, description, color, github_repo, github_project_id });
         showToast('Project updated');
       } else {
-        await apiService.createProject({ category_id, name, description, color });
+        await apiService.createProject({ category_id, name, description, color, github_repo, github_project_id });
         showToast('Project created');
       }
       modalManager.closeModal(el.modalProject);

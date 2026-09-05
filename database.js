@@ -23,6 +23,8 @@ function initDb() {
       name TEXT NOT NULL,
       description TEXT,
       color TEXT DEFAULT '#ffffff',
+      github_repo TEXT,
+      github_project_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
