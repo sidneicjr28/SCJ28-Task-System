@@ -994,13 +994,24 @@ document.addEventListener('DOMContentLoaded', () => {
       renderGitHubBoard(el.githubBoardContainer, { ...boardData, authStatus, projectId }, githubBoardHandlers);
     } catch (err) {
       el.githubBoardContainer.innerHTML = `
-        <div class="empty-state" style="color:var(--accent-red);max-width:500px;margin:40px auto;text-align:center;">
-          <i data-lucide="alert-circle" style="width:44px;height:44px;margin-bottom:12px;"></i>
-          <h3>GitHub Board Notice</h3>
-          <p style="margin-bottom:16px;">${escapeHtml(err.message)}</p>
-          <button class="btn btn-secondary btn-sm" id="btn-retry-gh-board">Retry</button>
+        <div class="empty-state" style="max-width:540px;margin:40px auto;text-align:center;">
+          <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 28px 24px;">
+            <i data-lucide="alert-circle" style="width:44px;height:44px;margin-bottom:12px;color:var(--accent-red);"></i>
+            <h3 style="color:var(--accent-red);margin-bottom:8px;font-weight:700;">GitHub Board Notice</h3>
+            <p style="margin-bottom:20px;color:var(--text-main);word-break:break-word;font-size:0.9rem;line-height:1.5;">${escapeHtml(err.message)}</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+              <button class="btn btn-primary btn-sm" id="btn-edit-gh-link">
+                <i data-lucide="link"></i> Edit Link
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-retry-gh-board">
+                <i data-lucide="refresh-cw"></i> Retry
+              </button>
+            </div>
+          </div>
         </div>
       `;
+      const btnEdit = el.githubBoardContainer.querySelector('#btn-edit-gh-link');
+      if (btnEdit) btnEdit.addEventListener('click', () => openGitHubLinkModal(projectId));
       const btnRetry = el.githubBoardContainer.querySelector('#btn-retry-gh-board');
       if (btnRetry) btnRetry.addEventListener('click', () => loadGitHubBoard(projectId));
       if (window.lucide) window.lucide.createIcons();
