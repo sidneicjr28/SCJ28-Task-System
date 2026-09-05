@@ -1,4 +1,4 @@
-# Software Requirements Specification (SRS) - SCJ28 (v0.3.1)
+# Software Requirements Specification (SRS) - SCJ28 (v0.3.2)
 
 ## 1. Introduction
 

@@ -1,4 +1,4 @@
-# REST API Specification - SCJ28 (v0.3.1)
+# REST API Specification - SCJ28 (v0.3.2)
 
 All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. All request payload and response data exchange formats use `Content-Type: application/json`.
 

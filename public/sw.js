@@ -1,5 +1,5 @@
 // SCJ28 Progressive Web App - Service Worker
-const CACHE_NAME = 'scj28-v0.3.1';
+const CACHE_NAME = 'scj28-v0.3.2';
 
 const STATIC_ASSETS = [
   './',
@@ -18,6 +18,7 @@ const STATIC_ASSETS = [
   './js/ui/toast.js',
   './js/renderers/calendarRenderer.js',
   './js/renderers/categoryRenderer.js',
+  './js/renderers/githubRenderer.js',
   './js/renderers/kanbanRenderer.js',
   './js/renderers/listRenderer.js',
   './js/renderers/statsRenderer.js',

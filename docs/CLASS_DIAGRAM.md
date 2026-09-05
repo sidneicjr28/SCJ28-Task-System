@@ -1,4 +1,4 @@
-# Class Diagram & System Architecture Models - SCJ28 (v0.3.1)
+# Class Diagram & System Class & Data Architecture Diagram - SCJ28 (v0.3.2)
 
 This document presents structural diagrams, database entity-relationship models, UML class representations, and client state contracts for SCJ28.
 

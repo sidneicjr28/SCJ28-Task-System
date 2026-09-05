@@ -1,6 +1,6 @@
 # SCJ28 Developer Documentation
 
-Welcome to the **SCJ28 Developer Documentation** (v0.3.1). This documentation suite provides technical specifications, operational architecture, system requirements, use case specifications, and structural diagrams to help developers understand, maintain, and extend the SCJ28 Task & Diary Management platform.
+Welcome to the **SCJ28 Developer Documentation** (v0.3.2). This documentation suite provides technical specifications, operational architecture, system requirements, use case specifications, and structural diagrams to help developers understand, maintain, and extend the SCJ28 Task & Diary Management platform.
 
 ---
 

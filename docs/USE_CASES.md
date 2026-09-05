@@ -1,4 +1,4 @@
-# Use Case Specifications - SCJ28 (v0.3.1)
+# Use Case Specification - SCJ28 (v0.3.2)
 
 This document details the primary use cases for the SCJ28 Academic & Startup Task Manager.
 
