@@ -16,6 +16,7 @@ services:
       - ./tasks.db-wal:/app/tasks.db-wal
       - ./tasks.db-shm:/app/tasks.db-shm
       - ./bkg-image:/app/bkg-image
+      - ./uploads:/app/uploads
       - ./.env:/app/.env
       - ./settings.json:/app/settings.json
     restart: unless-stopped
