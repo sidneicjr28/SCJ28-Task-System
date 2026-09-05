@@ -14,8 +14,9 @@ tasks.db-shm
 # User Storage & Uploads
 bkg-image/*
 !bkg-image/.gitkeep
-uploads/*
-!uploads/.gitkeep
+uploads/**/*
+!uploads/**/
+!uploads/**/.gitkeep
 
 # System & OS Files
 .DS_Store

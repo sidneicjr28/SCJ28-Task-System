@@ -11,7 +11,7 @@ The application features a sleek dark-mode user interface, hierarchical task org
 
 - **Backend**: Node.js + Express.js REST API (`server.js`)
 - **Database**: SQLite3 via `better-sqlite3` (`database.js` creating `tasks.db`, `tasks.db-wal`, and `tasks.db-shm` with WAL mode & graceful `wal_checkpoint(TRUNCATE)` shutdown handlers)
-- **Storage**: `./bkg-image` subfolder for uploaded wallpaper background images & Docker volume mounts for database state (`tasks.db`, `tasks.db-wal`, `tasks.db-shm`)
+- **Storage**: `./bkg-image` subfolder for uploaded wallpaper background images, `./uploads` subfolder for diary entry images & Docker volume mounts for persistent data state (`tasks.db`, `tasks.db-wal`, `tasks.db-shm`, `bkg-image`, `uploads`)
 - **Frontend**: Vanilla HTML5, CSS3, and ES6 JavaScript (`public/`)
 - **PWA Capabilities**: Web App Manifest (`manifest.json`), Service Worker (`sw.js`), offline shell caching, install prompt lifecycle (`pwaService.js`)
 - **Icons**: Lucide Icons library (`https://unpkg.com/lucide@latest`)
