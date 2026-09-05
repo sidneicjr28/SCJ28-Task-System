@@ -1152,8 +1152,160 @@ body {
 }
 
 #modal-theme .modal-content {
-  max-height: 75vh;
+  width: 720px;
+  height: 480px;
+  max-width: 92vw;
+  max-height: 85vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#modal-theme .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+#modal-theme .modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.settings-modal-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.settings-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Settings Navigation Tabs (Vertical Left Sidebar) */
+.settings-nav-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: none;
+  padding: 0;
   overflow-y: auto;
+}
+
+.settings-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.settings-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings-tab-btn.active {
+  color: #ffffff;
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+}
+
+.settings-content-area {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.settings-tab-pane {
+  display: none;
+}
+
+.settings-tab-pane.active {
+  display: block;
+}
+
+/* Icon & Password Input Wrapper Layout */
+.input-icon-wrapper,
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon-wrapper .input-icon,
+.input-icon-wrapper svg.input-icon,
+.input-icon-wrapper i.input-icon,
+.password-input-wrapper .input-icon,
+.password-input-wrapper svg.input-icon,
+.password-input-wrapper i.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.input-icon-wrapper input,
+.password-input-wrapper input {
+  padding-left: 42px !important;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 44px !important;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+  z-index: 3;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-main);
 }
 
 .modal-lg {
@@ -1199,6 +1351,7 @@ label {
 }
 
 input[type="text"],
+input[type="password"],
 input[type="datetime-local"],
 select,
 textarea {
@@ -1211,6 +1364,7 @@ textarea {
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
   color-scheme: dark;
+  width: 100%;
 }
 
 select {

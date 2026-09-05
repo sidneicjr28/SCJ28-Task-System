@@ -917,6 +917,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     modalManager.openModal(document.getElementById('modal-theme'));
+    if (window.lucide) {
+      lucide.createIcons();
+    }
   }
 
   async function handleSaveTheme() {
@@ -1296,6 +1299,48 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSelectBkg.addEventListener('click', () => inputBkgFile.click());
       inputBkgFile.addEventListener('change', handleBkgFileSelect);
     }
+    // Settings Tab Switching
+    const settingsTabBtns = document.querySelectorAll('.settings-tab-btn');
+    settingsTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTabId = btn.getAttribute('data-tab');
+        settingsTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tabPanes = document.querySelectorAll('.settings-tab-pane');
+        tabPanes.forEach(pane => {
+          if (pane.id === targetTabId) {
+            pane.classList.add('active');
+          } else {
+            pane.classList.remove('active');
+          }
+        });
+
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+      });
+    });
+
+    // GitHub Client Secret Toggle Visibility
+    const btnToggleGhSecret = document.getElementById('btn-toggle-gh-secret');
+    const inputGhSecret = document.getElementById('input-gh-client-secret');
+    if (btnToggleGhSecret && inputGhSecret) {
+      btnToggleGhSecret.addEventListener('click', () => {
+        const currentType = inputGhSecret.getAttribute('type');
+        if (currentType === 'password') {
+          inputGhSecret.setAttribute('type', 'text');
+          btnToggleGhSecret.innerHTML = '<i data-lucide="eye-off"></i>';
+        } else {
+          inputGhSecret.setAttribute('type', 'password');
+          btnToggleGhSecret.innerHTML = '<i data-lucide="eye"></i>';
+        }
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+      });
+    }
+
     if (btnRemoveBkg) {
       btnRemoveBkg.addEventListener('click', handleRemoveBkg);
     }
