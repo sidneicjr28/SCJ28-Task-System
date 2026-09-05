@@ -1,9 +1,32 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const apiRoutes = require('./src/routes/apiRoutes');
-
 const fs = require('fs');
+
+// Load environment variables from .env file if present
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  try {
+    if (typeof process.loadEnvFile === 'function') {
+      process.loadEnvFile(envPath);
+    } else {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const [key, ...vals] = trimmed.split('=');
+          if (key) {
+            process.env[key.trim()] = vals.join('=').trim().replace(/^["']|["']$/g, '');
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error loading .env file:', err);
+  }
+}
+
+const apiRoutes = require('./src/routes/apiRoutes');
 
 const app = express();
 const INITIAL_PORT = parseInt(process.env.PORT || '2800', 10);

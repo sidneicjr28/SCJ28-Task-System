@@ -9,9 +9,13 @@ services:
     container_name: scj28-task-manager
     ports:
       - "${PORT:-2800}:2800"
+    env_file:
+      - .env
     volumes:
       - ./tasks.db:/app/tasks.db
       - ./bkg-image:/app/bkg-image
+      - ./.env:/app/.env
+      - ./settings.json:/app/settings.json
     restart: unless-stopped
     environment:
       - NODE_ENV=production

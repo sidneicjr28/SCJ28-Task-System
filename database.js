@@ -78,8 +78,22 @@ function initDb() {
     if (!hasReminderCol) {
       db.exec("ALTER TABLE tasks ADD COLUMN reminder_frequency TEXT DEFAULT 'smart'");
     }
+
+    const hasGhIssueId = tableInfo.some(col => col.name === 'github_issue_id');
+    if (!hasGhIssueId) {
+      db.exec("ALTER TABLE tasks ADD COLUMN github_issue_id INTEGER");
+      db.exec("ALTER TABLE tasks ADD COLUMN github_issue_number INTEGER");
+      db.exec("ALTER TABLE tasks ADD COLUMN github_issue_url TEXT");
+    }
+
+    const projTableInfo = db.pragma('table_info(projects)');
+    const hasGhRepo = projTableInfo.some(col => col.name === 'github_repo');
+    if (!hasGhRepo) {
+      db.exec("ALTER TABLE projects ADD COLUMN github_repo TEXT");
+      db.exec("ALTER TABLE projects ADD COLUMN github_project_id TEXT");
+    }
   } catch (err) {
-    console.error('Migration error adding reminder_frequency:', err);
+    console.error('Migration error adding GitHub columns:', err);
   }
 }
 
