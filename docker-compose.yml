@@ -13,6 +13,8 @@ services:
       - .env
     volumes:
       - ./tasks.db:/app/tasks.db
+      - ./tasks.db-wal:/app/tasks.db-wal
+      - ./tasks.db-shm:/app/tasks.db-shm
       - ./bkg-image:/app/bkg-image
       - ./.env:/app/.env
       - ./settings.json:/app/settings.json

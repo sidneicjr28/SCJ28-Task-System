@@ -8,9 +8,15 @@ echo "=================================================="
 echo " Starting SCJ28 Academic & Startup Task Manager..."
 echo "=================================================="
 
-# Ensure tasks.db file exists (prevents Docker from creating a directory)
+# Ensure tasks.db file and WAL/SHM sidecars exist (prevents Docker from creating directories)
 if [ ! -f "tasks.db" ]; then
     touch tasks.db
+fi
+if [ ! -f "tasks.db-wal" ]; then
+    touch tasks.db-wal
+fi
+if [ ! -f "tasks.db-shm" ]; then
+    touch tasks.db-shm
 fi
 
 # Function to check if a port is in use
@@ -75,6 +81,8 @@ if command -v docker &> /dev/null && docker info &> /dev/null; then
         --name "$CONTAINER_NAME" \
         -p "$PORT:2800" \
         -v "$DIR/tasks.db:/app/tasks.db" \
+        -v "$DIR/tasks.db-wal:/app/tasks.db-wal" \
+        -v "$DIR/tasks.db-shm:/app/tasks.db-shm" \
         scj28-task-manager:latest > /dev/null
 
     echo "[INFO] Container active! Opening $URL in browser..."

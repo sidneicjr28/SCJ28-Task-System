@@ -13,7 +13,7 @@ SCJ28 is a single-page task & diary management web application engineered for or
 ## 2. System Architecture & Tech Constraints
 
 - **Backend**: Node.js REST API with Express.js framework (`server.js`).
-- **Database Engine**: Embedded SQLite3 database via synchronous `better-sqlite3` driver (`database.js`).
+- **Database Engine**: Embedded SQLite3 database via synchronous `better-sqlite3` driver (`database.js`). Operates in WAL journal mode with host volume mounting of `tasks.db`, `tasks.db-wal`, and `tasks.db-shm` to ensure transactional persistence across Docker container rebuilds and restarts.
 - **Storage**: Server filesystem storage at `./uploads/diary-images/` for pasted markdown images & `./bkg-image/` for custom wallpaper background images.
 - **Frontend Architecture**: Dependency-free Vanilla HTML5, standard CSS3 variables, `marked.js` markdown parser, and ES6 JavaScript (`public/app.js`).
 - **Styling Paradigm**: Minimalist dark theme (`#0a0a0a` background, `#ff3333` accent red, glassmorphic blurred panels with customizable panel dark opacity).

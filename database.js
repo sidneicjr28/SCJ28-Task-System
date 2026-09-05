@@ -99,4 +99,17 @@ function initDb() {
 
 initDb();
 
+function gracefulShutdown() {
+  try {
+    db.pragma('wal_checkpoint(TRUNCATE)');
+    db.close();
+  } catch (err) {
+    // Ignore if already closed
+  }
+}
+
+process.on('SIGINT', () => { gracefulShutdown(); process.exit(0); });
+process.on('SIGTERM', () => { gracefulShutdown(); process.exit(0); });
+
 module.exports = db;
+

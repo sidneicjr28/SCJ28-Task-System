@@ -29,7 +29,7 @@ SCJ28 is a lightweight, zero-build single-page web application built with a deco
 
 ### System Stack
 - **Backend Runtime**: Node.js + Express.js
-- **Database**: SQLite3 via `better-sqlite3` (file-backed at `tasks.db` with WAL support)
+- **Database**: SQLite3 via `better-sqlite3` (file-backed at `tasks.db` with WAL sidecars `tasks.db-wal`/`tasks.db-shm` mounted in Docker & process exit `wal_checkpoint` flushes)
 - **Image Storage**: `./uploads/diary-images/` for pasted markdown screenshots & `./bkg-image/` for wallpaper background images
 - **Frontend Engine**: Vanilla HTML5, CSS3 Variables, ES6 JavaScript (`public/`)
 - **Markdown Engine**: `marked.js` with GFM task list & line breaks support
