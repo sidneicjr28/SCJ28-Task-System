@@ -38,6 +38,8 @@ The application features a sleek dark-mode user interface, hierarchical task org
 - `name` (TEXT NOT NULL) e.g., *Data Structures & Algorithms*, *Startup Alpha*
 - `description` (TEXT)
 - `color` (TEXT)
+- `github_repo` (TEXT) e.g., `owner/repository`
+- `github_project_id` (TEXT) e.g., GitHub Project (v2) ID or URL
 
 ### 3. `tasks`
 - `id` (INTEGER PRIMARY KEY AUTOINCREMENT)
@@ -51,6 +53,9 @@ The application features a sleek dark-mode user interface, hierarchical task org
   - `3`: **P3 - Medium** (Standard Gray/White)
   - `4`: **P4 - Low** (Muted)
 - `status` (TEXT: `'todo'`, `'in_progress'`, `'done'`)
+- `github_issue_id` (INTEGER)
+- `github_issue_number` (INTEGER)
+- `github_issue_url` (TEXT)
 - `created_at` / `updated_at` (DATETIME)
 
 ### 4. `subtasks`
@@ -67,15 +72,17 @@ The application features a sleek dark-mode user interface, hierarchical task org
 ```
 SCJ28/
 ├── package.json         # Node dependencies (express, better-sqlite3, cors)
-├── server.js            # Express REST API server endpoints & routing
+├── server.js            # Express REST API server endpoints & routing (.env autoloader)
 ├── database.js          # SQLite connection, schema definition & default seed data
+├── .env                 # Local environment configuration file
+├── .env.example         # Environment variables template
 ├── tasks.db             # Local SQLite database file (auto-generated)
 ├── SCJ28-square.png     # Application logo
 ├── bkg-image/           # Uploaded background image storage folder
 ├── src/                 # Backend REST Controllers & Services
-│   ├── controllers/     # Task, Category, Project, Background & Settings controllers
-│   ├── services/        # Business logic & image storage management
-│   └── routes/          # Express route bindings (/api/tasks, /api/background, etc.)
+│   ├── controllers/     # Task, Category, Project, Background, Settings & GitHub controllers
+│   ├── services/        # Business logic & image storage management & GitHub API integration
+│   └── routes/          # Express route bindings (/api/tasks, /api/github, etc.)
 └── public/
     ├── index.html       # Single-page application markup & modals
     ├── styles.css       # Black/White/Red minimalist glassmorphic CSS
@@ -96,9 +103,11 @@ SCJ28/
         ├── ui/          # Toast & Modal UI managers
         │   ├── modalManager.js
         │   └── toast.js
-        └── renderers/   # Modular view renderers (List, Kanban, Calendar, Stats, Categories)
+        └── renderers/   # Modular view renderers (List, Kanban, Calendar, GitHub, Stats, Categories)
             ├── calendarRenderer.js
             ├── categoryRenderer.js
+            ├── diaryRenderer.js
+            ├── githubRenderer.js
             ├── kanbanRenderer.js
             ├── listRenderer.js
             └── statsRenderer.js
@@ -111,14 +120,19 @@ SCJ28/
 1. **Server Execution**:
    - Quick launch script (Linux/macOS): `./run.sh` (starts server on port 2800 and opens browser automatically)
    - Quick launch script (Windows): `run.bat` or `run.cmd`
-   - Direct node command: `node server.js`
+   - Direct node command: `node server.js` (automatically loads `.env`)
    - Access web app: `http://localhost:2800` (Navbar brand: SCJ28 Task System v0.3.1)
 
 2. **API Conventions**:
    - All REST API routes are prefixed with `/api/`.
    - `GET /api/categories` - Returns categories tree with nested projects.
    - `POST / PUT / DELETE /api/categories` - Full CRUD for categories.
-   - `POST / PUT / DELETE /api/projects` - Full CRUD for projects under categories.
+   - `POST / PUT / DELETE /api/projects` - Full CRUD for projects under categories (supports `github_repo` and `github_project_id`).
+   - `GET /api/github/auth` & `GET /api/github/callback` - Initiates & completes GitHub OAuth 2.0 login.
+   - `GET /api/github/status` & `POST /api/github/disconnect` - Checks connection status and revokes tokens.
+   - `GET /api/github/projects/:projectId/board` - Fetches live GitHub issues and board cards.
+   - `POST /api/github/projects/:projectId/issues` - Quick-creates a new GitHub issue.
+   - `POST /api/github/projects/:projectId/import-task` - Imports a GitHub card into local SCJ28 `tasks.db`.
    - `GET /api/settings` & `PUT /api/settings` - Fetches and saves website accent color theme in `settings.json`.
    - `GET /api/background`, `POST /api/background`, `DELETE /api/background` - Background wallpaper upload, retrieval, and removal (`bkg-image/`).
    - `GET /api/tasks` - Supports query parameters: `category_id`, `project_id`, `status`, `filter` (`today`, `upcoming`, `overdue`), `search`.

@@ -35,6 +35,14 @@ All SCJ28 REST API routes are hosted by `server.js` and prefixed with `/api/`. A
 | `GET` | `/api/stats` | Returns aggregate system statistics | None |
 | `GET` | `/api/export` | Downloads full database & settings backup as JSON | None |
 | `POST` | `/api/import` | Imports database & settings JSON (`mode: replace` or `merge`) | None |
+| `GET` | `/api/github/auth` | Initiates GitHub OAuth 2.0 authorization redirect | None |
+| `GET` | `/api/github/callback` | Handles OAuth 2.0 code exchange callback | `code` |
+| `GET` | `/api/github/status` | Checks GitHub connection & user profile status | None |
+| `POST` | `/api/github/disconnect` | Revokes stored GitHub access token | None |
+| `POST` | `/api/github/config` | Saves GitHub OAuth Client ID & Secret | None |
+| `GET` | `/api/github/projects/:projectId/board` | Fetches live GitHub issues and board cards | None |
+| `POST` | `/api/github/projects/:projectId/issues` | Quick-creates a new issue in the linked repository | None |
+| `POST` | `/api/github/projects/:projectId/import-task` | Imports a GitHub issue card into local SCJ28 `tasks.db` | None |
 
 ---
 
