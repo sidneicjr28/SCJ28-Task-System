@@ -13,6 +13,7 @@ import { renderKanbanBoard } from './renderers/kanbanRenderer.js';
 import { renderCalendarView } from './renderers/calendarRenderer.js';
 import { renderStats } from './renderers/statsRenderer.js';
 import { renderDiariesList, parseMarkdown } from './renderers/diaryRenderer.js';
+import { renderGitHubBoard } from './renderers/githubRenderer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   let pendingImportData = null;
@@ -23,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tasksListContainer: document.getElementById('tasks-list-container'),
     diariesListContainer: document.getElementById('diaries-list-container'),
     viewDiaries: document.getElementById('view-diaries'),
+    viewGithub: document.getElementById('view-github'),
+    githubBoardContainer: document.getElementById('github-board-container'),
     contentSubtabs: document.getElementById('content-subtabs'),
     statTotal: document.getElementById('stat-total'),
     statPending: document.getElementById('stat-pending'),
@@ -307,12 +310,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const isDiariesView = state.activeTab === 'diaries' || state.activeFilter === 'diaries';
+    const isGithubView = state.activeTab === 'github';
 
-    if (isDiariesView) {
+    if (isGithubView) {
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      if (el.viewGithub) el.viewGithub.classList.add('active');
+      loadGitHubBoard(state.activeProject);
+    } else if (isDiariesView) {
+      if (el.viewGithub) el.viewGithub.classList.remove('active');
       document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
       if (el.viewDiaries) el.viewDiaries.classList.add('active');
       renderDiariesList(el.diariesListContainer, state.diaries);
     } else {
+      if (el.viewGithub) el.viewGithub.classList.remove('active');
       if (el.viewDiaries) el.viewDiaries.classList.remove('active');
       document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
       const pane = document.getElementById(`view-${state.currentView}`);
@@ -877,7 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function openThemeModal() {
+  async function openThemeModal() {
     const state = store.getState();
     const currentColor = (state.settings && state.settings.accentColor) || '#ff3333';
 
@@ -892,6 +902,20 @@ document.addEventListener('DOMContentLoaded', () => {
       p.checked = p.value.toLowerCase() === currentColor.toLowerCase();
     });
 
+    try {
+      const ghStatus = await apiService.getGitHubStatus();
+      const inputGhClientId = document.getElementById('input-gh-client-id');
+      const inputGhSecret = document.getElementById('input-gh-client-secret');
+      if (inputGhClientId && state.settings.github_client_id) {
+        inputGhClientId.value = state.settings.github_client_id;
+      }
+      if (inputGhSecret && state.settings.github_client_secret) {
+        inputGhSecret.value = state.settings.github_client_secret;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
     modalManager.openModal(document.getElementById('modal-theme'));
   }
 
@@ -904,14 +928,176 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const inputGhClientId = document.getElementById('input-gh-client-id');
+    const inputGhSecret = document.getElementById('input-gh-client-secret');
+    const ghClientId = inputGhClientId ? inputGhClientId.value.trim() : '';
+    const ghClientSecret = inputGhSecret ? inputGhSecret.value.trim() : '';
+
     try {
       applyAccentColor(colorVal);
       await apiService.updateSettings({ accentColor: colorVal });
-      store.setState({ settings: { ...store.getState().settings, accentColor: colorVal } });
+      if (ghClientId || ghClientSecret) {
+        await apiService.saveGitHubConfig({ client_id: ghClientId, client_secret: ghClientSecret });
+      }
+      store.setState({ settings: { ...store.getState().settings, accentColor: colorVal, github_client_id: ghClientId, github_client_secret: ghClientSecret } });
       modalManager.closeModal(document.getElementById('modal-theme'));
-      showToast('Theme accent color saved!');
+      showToast('Settings saved successfully!');
     } catch (err) {
-      showToast('Error saving theme: ' + err.message);
+      showToast('Error saving settings: ' + err.message);
+    }
+  }
+
+  // ----------------------------------------------------
+  // GitHub Integration Handlers
+  // ----------------------------------------------------
+
+  const githubBoardHandlers = {
+    onConnectRepo: (projectId) => openGitHubLinkModal(projectId),
+    onOAuthLogin: () => openGitHubOAuthLogin(),
+    onRefresh: (projectId) => loadGitHubBoard(projectId),
+    onCreateIssue: (projectId) => openGitHubIssueModal(projectId),
+    onImportTask: (projectId, issueData) => importGitHubIssueToTask(projectId, issueData),
+    onOpenGuide: () => modalManager.openModal(document.getElementById('modal-github-guide'))
+  };
+
+  async function loadGitHubBoard(projectId) {
+    if (!el.githubBoardContainer) return;
+    if (!projectId) {
+      renderGitHubBoard(el.githubBoardContainer, { configured: false, projectId: null }, githubBoardHandlers);
+      return;
+    }
+
+    el.githubBoardContainer.innerHTML = `
+      <div style="padding:40px;text-align:center;color:var(--text-muted);">
+        <i data-lucide="loader-2" class="spin" style="width:32px;height:32px;margin-bottom:8px;"></i>
+        <p>Fetching live GitHub Board...</p>
+      </div>
+    `;
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+      const boardData = await apiService.getGitHubBoard(projectId);
+      const authStatus = await apiService.getGitHubStatus();
+      renderGitHubBoard(el.githubBoardContainer, { ...boardData, authStatus, projectId }, githubBoardHandlers);
+    } catch (err) {
+      el.githubBoardContainer.innerHTML = `
+        <div class="empty-state" style="color:var(--accent-red);max-width:500px;margin:40px auto;text-align:center;">
+          <i data-lucide="alert-circle" style="width:44px;height:44px;margin-bottom:12px;"></i>
+          <h3>GitHub Board Notice</h3>
+          <p style="margin-bottom:16px;">${escapeHtml(err.message)}</p>
+          <button class="btn btn-secondary btn-sm" id="btn-retry-gh-board">Retry</button>
+        </div>
+      `;
+      const btnRetry = el.githubBoardContainer.querySelector('#btn-retry-gh-board');
+      if (btnRetry) btnRetry.addEventListener('click', () => loadGitHubBoard(projectId));
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+
+  function openGitHubLinkModal(projectId) {
+    const modalLink = document.getElementById('modal-github-link');
+    const inputProjId = document.getElementById('gh-link-project-id');
+    const inputRepo = document.getElementById('gh-link-repo');
+    const inputBoardId = document.getElementById('gh-link-project-id-input');
+
+    if (!modalLink) return;
+
+    let targetProj = null;
+    store.getState().categories.forEach(c => {
+      const p = (c.projects || []).find(pj => pj.id == projectId);
+      if (p) targetProj = p;
+    });
+
+    if (inputProjId) inputProjId.value = projectId || '';
+    if (inputRepo) inputRepo.value = targetProj ? (targetProj.github_repo || '') : '';
+    if (inputBoardId) inputBoardId.value = targetProj ? (targetProj.github_project_id || '') : '';
+
+    modalManager.openModal(modalLink);
+  }
+
+  async function handleGitHubLinkSubmit(e) {
+    e.preventDefault();
+    const projectId = document.getElementById('gh-link-project-id').value;
+    const github_repo = document.getElementById('gh-link-repo').value.trim();
+    const github_project_id = document.getElementById('gh-link-project-id-input').value.trim();
+
+    if (!github_repo) {
+      showToast('Please enter a valid GitHub repository (owner/repo)');
+      return;
+    }
+
+    try {
+      await apiService.updateProject(projectId, { github_repo, github_project_id });
+      modalManager.closeModal(document.getElementById('modal-github-link'));
+      showToast('GitHub repository connection saved!');
+      await loadCategories();
+      loadGitHubBoard(projectId);
+    } catch (err) {
+      showToast('Failed to save connection: ' + err.message);
+    }
+  }
+
+  async function openGitHubOAuthLogin() {
+    try {
+      const data = await apiService.getGitHubAuthUrl();
+      if (data && data.url) {
+        window.open(data.url, 'GitHub OAuth Authorization', 'width=600,height=700');
+      }
+    } catch (err) {
+      showToast('OAuth Error: ' + err.message);
+    }
+  }
+
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'GITHUB_AUTH_SUCCESS') {
+      showToast('GitHub account connected successfully!');
+      const activeProj = store.getState().activeProject;
+      if (activeProj) loadGitHubBoard(activeProj);
+    }
+  });
+
+  function openGitHubIssueModal(projectId) {
+    const modalIssue = document.getElementById('modal-github-issue');
+    const formIssue = document.getElementById('form-github-issue');
+    if (!modalIssue) return;
+    if (formIssue) formIssue.reset();
+    modalManager.openModal(modalIssue);
+  }
+
+  async function handleGitHubIssueSubmit(e) {
+    e.preventDefault();
+    const projectId = store.getState().activeProject;
+    const title = document.getElementById('gh-issue-title').value.trim();
+    const body = document.getElementById('gh-issue-body').value.trim();
+    const labelsRaw = document.getElementById('gh-issue-labels').value.trim();
+    const labels = labelsRaw ? labelsRaw.split(',').map(l => l.trim()).filter(Boolean) : [];
+
+    if (!title) {
+      showToast('Issue title is required');
+      return;
+    }
+
+    try {
+      showToast('Creating GitHub Issue...');
+      await apiService.createGitHubIssue(projectId, { title, body, labels });
+      modalManager.closeModal(document.getElementById('modal-github-issue'));
+      showToast('GitHub Issue created successfully!');
+      loadGitHubBoard(projectId);
+    } catch (err) {
+      showToast('Error creating issue: ' + err.message);
+    }
+  }
+
+  async function importGitHubIssueToTask(projectId, issueData) {
+    try {
+      showToast(`Importing #${issueData.number} into SCJ28 Tasks...`);
+      await apiService.importGitHubTask(projectId, issueData);
+      showToast(`Task [#${issueData.number}] imported successfully!`);
+      await loadTasks();
+      await loadStats();
+      loadGitHubBoard(projectId);
+    } catch (err) {
+      showToast('Error importing task: ' + err.message);
     }
   }
 
@@ -925,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('.sidebar').classList.toggle('mobile-open');
     });
 
-    // Content Sub-tabs (Tasks | Diaries) switching
+    // Content Sub-tabs (Tasks | Diaries | GitHub Board) switching
     if (el.contentSubtabs) {
       el.contentSubtabs.addEventListener('click', (e) => {
         const btn = e.target.closest('.subtab-btn');
@@ -933,6 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tab = btn.dataset.tab;
         store.setState({ activeTab: tab });
         if (tab === 'diaries') loadDiaries();
+        else if (tab === 'github') loadGitHubBoard(store.getState().activeProject);
         else loadTasks();
       });
     }
@@ -1244,6 +1431,12 @@ document.addEventListener('DOMContentLoaded', () => {
     el.formProject.addEventListener('submit', handleProjectFormSubmit);
     el.formCategory.addEventListener('submit', handleCategoryFormSubmit);
     if (el.formDiary) el.formDiary.addEventListener('submit', handleDiaryFormSubmit);
+
+    const formGhLink = document.getElementById('form-github-link');
+    if (formGhLink) formGhLink.addEventListener('submit', handleGitHubLinkSubmit);
+
+    const formGhIssue = document.getElementById('form-github-issue');
+    if (formGhIssue) formGhIssue.addEventListener('submit', handleGitHubIssueSubmit);
 
     // Dynamic Subtasks Builder
     el.btnAddSubtaskRow.addEventListener('click', () => addSubtaskRow());

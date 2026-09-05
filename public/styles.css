@@ -1690,3 +1690,100 @@ input:focus, select:focus, textarea:focus {
   width: 12px;
   height: 12px;
 }
+
+/* GitHub Board View Styles */
+.github-board-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+}
+
+.github-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background: var(--bg-sidebar);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gh-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gh-repo-link {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.gh-repo-link:hover {
+  color: var(--accent-red);
+}
+
+.gh-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gh-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.gh-avatar-sm {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.gh-avatar-xs {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+
+.gh-issue-card {
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.gh-issue-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.gh-label {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.btn-xs {
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  border-radius: var(--radius-sm);
+}
+

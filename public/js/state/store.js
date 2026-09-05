@@ -10,7 +10,7 @@ class Store {
       activeFilter: 'all', // 'all', 'today', 'upcoming', 'overdue', 'diaries'
       activeCategory: null,
       activeProject: null,
-      activeTab: 'tasks', // 'tasks', 'diaries'
+      activeTab: 'tasks', // 'tasks', 'diaries', 'github'
       currentView: 'list', // 'list', 'kanban', 'calendar'
       searchQuery: '',
       filterStatus: '',

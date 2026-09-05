@@ -241,5 +241,63 @@ export const apiService = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to upload diary image');
     return data;
+  },
+
+  async getGitHubAuthUrl() {
+    const res = await fetch('/api/github/auth');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to get GitHub auth URL');
+    return data;
+  },
+
+  async getGitHubStatus() {
+    const res = await fetch('/api/github/status');
+    if (!res.ok) throw new Error('Failed to get GitHub connection status');
+    return res.json();
+  },
+
+  async disconnectGitHub() {
+    const res = await fetch('/api/github/disconnect', { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to disconnect GitHub account');
+    return res.json();
+  },
+
+  async saveGitHubConfig(payload) {
+    const res = await fetch('/api/github/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to save GitHub credentials');
+    return res.json();
+  },
+
+  async getGitHubBoard(projectId) {
+    const res = await fetch(`/api/github/projects/${projectId}/board`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch GitHub board');
+    return data;
+  },
+
+  async createGitHubIssue(projectId, payload) {
+    const res = await fetch(`/api/github/projects/${projectId}/issues`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create GitHub issue');
+    return data;
+  },
+
+  async importGitHubTask(projectId, issueData) {
+    const res = await fetch(`/api/github/projects/${projectId}/import-task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(issueData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to import GitHub task');
+    return data;
   }
 };

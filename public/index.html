@@ -149,7 +149,7 @@
         </div>
       </header>
 
-      <!-- Content Sub-Tabs Bar (Tasks | Diaries) -->
+      <!-- Content Sub-Tabs Bar (Tasks | Diaries | GitHub Board) -->
       <div class="content-subtabs" id="content-subtabs">
         <button class="subtab-btn active" data-tab="tasks">
           <i data-lucide="check-square"></i>
@@ -158,6 +158,10 @@
         <button class="subtab-btn" data-tab="diaries">
           <i data-lucide="book-open"></i>
           <span>Diaries</span>
+        </button>
+        <button class="subtab-btn" data-tab="github">
+          <i data-lucide="github"></i>
+          <span>GitHub Board</span>
         </button>
       </div>
 
@@ -299,6 +303,14 @@
 
           <div id="diaries-list-container" class="diaries-list">
             <!-- Dynamic Diaries Rendered Here -->
+          </div>
+        </div>
+
+        <!-- 5. GitHub Board View -->
+        <div id="view-github" class="view-pane">
+          <!-- Rendered dynamically by githubRenderer.js -->
+          <div id="github-board-container" class="github-board-container">
+            <!-- Loading / Empty / Board content -->
           </div>
         </div>
       </div>
@@ -686,10 +698,158 @@
             </button>
           </div>
         </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <!-- GitHub OAuth Integration Settings -->
+        <div class="form-group">
+          <label style="font-weight: 600; color: var(--text-main); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="github"></i> GitHub OAuth Application
+          </label>
+          <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; margin-bottom: 12px; line-height: 1.4;">
+            Register an OAuth App at <code>github.com/settings/applications/new</code> with callback URL <code>http://localhost:2800/api/github/callback</code>.
+          </p>
+          <div class="form-group">
+            <label for="input-gh-client-id" style="font-size: 0.82rem;">GitHub Client ID</label>
+            <input type="text" id="input-gh-client-id" placeholder="e.g. Ov23... or Ov1.1234567890">
+          </div>
+          <div class="form-group">
+            <label for="input-gh-client-secret" style="font-size: 0.82rem;">GitHub Client Secret</label>
+            <input type="password" id="input-gh-client-secret" placeholder="Client secret string">
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-close="modal-theme">Cancel</button>
-        <button type="button" class="btn btn-primary" id="btn-save-theme">Save Theme</button>
+        <button type="button" class="btn btn-primary" id="btn-save-theme">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Project Link Modal -->
+  <div class="modal" id="modal-github-link">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Connect GitHub Repository</h3>
+        <button class="modal-close" data-close="modal-github-link"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-github-link">
+        <input type="hidden" id="gh-link-project-id">
+        <div class="form-group">
+          <label for="gh-link-repo">GitHub Repository (owner/repo) *</label>
+          <input type="text" id="gh-link-repo" required placeholder="e.g. facebook/react or sidneicjr28/SCJ28">
+          <small style="color: var(--text-muted); display: block; margin-top: 4px;">Must be formatted as <code>owner/repository</code></small>
+        </div>
+        <div class="form-group">
+          <label for="gh-link-project-id-input">GitHub Project (v2) ID / Board URL (Optional)</label>
+          <input type="text" id="gh-link-project-id-input" placeholder="e.g. 1 or https://github.com/orgs/myorg/projects/1">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-github-link">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Connection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quick Create GitHub Issue Modal -->
+  <div class="modal" id="modal-github-issue">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Create New GitHub Issue</h3>
+        <button class="modal-close" data-close="modal-github-issue"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-github-issue">
+        <div class="form-group">
+          <label for="gh-issue-title">Issue Title *</label>
+          <input type="text" id="gh-issue-title" required placeholder="e.g. Fix navbar responsiveness on mobile">
+        </div>
+        <div class="form-group">
+          <label for="gh-issue-body">Issue Description (Markdown supported)</label>
+          <textarea id="gh-issue-body" rows="6" placeholder="Describe the issue or feature request..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="gh-issue-labels">Labels (comma-separated)</label>
+          <input type="text" id="gh-issue-labels" placeholder="bug, enhancement, documentation">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-github-issue">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-github-issue">Create Issue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GitHub Setup & Integration Guide Modal -->
+  <div class="modal" id="modal-github-guide">
+    <div class="modal-content modal-lg" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="help-circle" style="color: var(--accent-red);"></i> GitHub Integration Setup Guide
+        </h3>
+        <button class="modal-close" data-close="modal-github-guide"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="line-height: 1.6; font-size: 0.9rem;">
+        
+        <div class="setup-step" style="margin-bottom: 20px;">
+          <h4 style="font-size: 1rem; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span style="background: var(--accent-red); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">1</span>
+            Register an OAuth App on GitHub
+          </h4>
+          <p style="color: var(--text-muted); margin-bottom: 8px;">
+            Go to GitHub's Developer Settings to register a new OAuth Application:
+          </p>
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: 0.85rem; margin-bottom: 8px;">
+            <div>• <strong>Register Link</strong>: <a href="https://github.com/settings/applications/new" target="_blank" rel="noopener" style="color: var(--accent-red); font-weight: 600;">github.com/settings/applications/new <i data-lucide="external-link" style="width:12px;height:12px;"></i></a></div>
+            <div>• <strong>Application Name</strong>: <code>SCJ28 Task Manager</code></div>
+            <div>• <strong>Homepage URL</strong>: <code>http://localhost:2800</code></div>
+            <div>• <strong>Authorization Callback URL</strong>: <code>http://localhost:2800/api/github/callback</code></div>
+          </div>
+          <p style="color: var(--text-muted);">
+            Click <strong>Register application</strong>, generate a <strong>Client Secret</strong>, and copy both values.
+          </p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 18px 0;">
+
+        <div class="setup-step" style="margin-bottom: 20px;">
+          <h4 style="font-size: 1rem; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span style="background: var(--accent-red); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">2</span>
+            Configure Credentials in SCJ28
+          </h4>
+          <p style="color: var(--text-muted); margin-bottom: 8px;">
+            You can save your credentials easily using either of these two methods:
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: 0.85rem;">
+              <strong>Option A: In SCJ28 Settings UI (Easiest)</strong><br>
+              Click <strong>Settings (<i data-lucide="palette" style="width:14px;height:14px;"></i>)</strong> in the top header, scroll to <em>GitHub OAuth Application</em>, paste your Client ID and Client Secret, and click <strong>Save Settings</strong>.
+            </div>
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: 0.85rem;">
+              <strong>Option B: Edit local <code>.env</code> file</strong><br>
+              Open <code>.env</code> in your project root and set:
+              <pre style="background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 4px; margin-top: 4px; color: #f5f5f5;">GITHUB_CLIENT_ID=your_client_id_here
+GITHUB_CLIENT_SECRET=your_client_secret_here</pre>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 18px 0;">
+
+        <div class="setup-step">
+          <h4 style="font-size: 1rem; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span style="background: var(--accent-red); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">3</span>
+            Connect Repository & Authenticate Account
+          </h4>
+          <p style="color: var(--text-muted);">
+            1. Select a project from the sidebar and click <strong>Link GitHub Repo</strong> (enter <code>owner/repository</code>).<br>
+            2. Click <strong>Connect GitHub Account</strong> to authorize your user account.
+          </p>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close="modal-github-guide">Got It!</button>
       </div>
     </div>
   </div>
