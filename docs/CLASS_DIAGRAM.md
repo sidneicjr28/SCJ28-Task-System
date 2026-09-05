@@ -31,6 +31,8 @@ erDiagram
         string name "NOT NULL"
         string description
         string color "DEFAULT '#ffffff'"
+        string github_repo "e.g. owner/repository"
+        string github_project_id "GitHub Project Board ID/URL"
         datetime created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
@@ -43,6 +45,9 @@ erDiagram
         int priority "1: P1, 2: P2, 3: P3, 4: P4"
         string status "'todo' | 'in_progress' | 'done'"
         string reminder_frequency "'smart' | 'hourly' | 'every_3h' | 'twice_daily' | 'daily' | 'due_only' | 'none'"
+        int github_issue_id "GitHub Issue ID"
+        int github_issue_number "GitHub Issue Number (#123)"
+        string github_issue_url "GitHub Issue HTML Link"
         datetime created_at "DEFAULT CURRENT_TIMESTAMP"
         datetime updated_at "DEFAULT CURRENT_TIMESTAMP"
     }

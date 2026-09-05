@@ -140,3 +140,27 @@ This document details the primary use cases for the SCJ28 Academic & Startup Tas
 
 - **Primary Actor**: User / Browser Notification Engine
 - **Description**: The application sends native OS notifications for due or overdue tasks.
+
+---
+
+## UC-08: View Live GitHub Board & Import Issues to Local Tasks
+
+- **Primary Actor**: User (Developer / Project Lead)
+- **Description**: The user links an SCJ28 project to a GitHub repository (`owner/repo`), authenticates via GitHub OAuth 2.0, views a live glassmorphic Kanban Board of repository issues, and imports selected GitHub cards as local SCJ28 database tasks.
+- **Preconditions**: User has an active project in SCJ28.
+
+### Main Success Flow
+1. User selects a project from the sidebar and clicks the **GitHub Board** sub-tab.
+2. **Repository Linkage**: User clicks "Link GitHub Repo" and enters `owner/repository`.
+3. **OAuth Authentication**: User clicks "Connect GitHub Account":
+   - System calls `/api/github/auth` and opens GitHub's OAuth login popup window.
+   - User grants authorization on GitHub.com.
+   - GitHub redirects to `/api/github/callback`, exchanging authorization code for access token.
+   - Popup sends success event message to SCJ28 window and closes automatically.
+4. **Live Board Render**: System fetches `/api/github/projects/:projectId/board` and renders a live glassmorphic Kanban Board with status columns (*To Do*, *In Progress*, *Done*).
+5. **Importing Task**: User clicks "Import to Task" on any GitHub issue card:
+   - System calls `POST /api/github/projects/:projectId/import-task`.
+   - Backend creates local task in `tasks.db` preserving issue title, number (`#123`), body description, and URL.
+   - System updates task lists and displays toast notification.
+6. **Quick Issue Creation**: User clicks "New Issue", fills in title/description/labels, and submits. System posts issue to GitHub via API and refreshes the board.
+
