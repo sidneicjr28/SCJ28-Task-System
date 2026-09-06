@@ -967,6 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubBoardHandlers = {
     onConnectRepo: (projectId) => openGitHubLinkModal(projectId),
     onOAuthLogin: () => openGitHubOAuthLogin(),
+    onDisconnect: () => handleGitHubDisconnect(),
     onRefresh: (projectId) => loadGitHubBoard(projectId),
     onCreateIssue: (projectId) => openGitHubIssueModal(projectId),
     onImportTask: (projectId, issueData) => importGitHubIssueToTask(projectId, issueData),
@@ -975,8 +976,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadGitHubBoard(projectId) {
     if (!el.githubBoardContainer) return;
+
+    let authStatus = { connected: false, user: null };
+    try {
+      authStatus = await apiService.getGitHubStatus();
+    } catch (e) {
+      console.error('Failed to check GitHub status:', e);
+    }
+
     if (!projectId) {
-      renderGitHubBoard(el.githubBoardContainer, { configured: false, projectId: null }, githubBoardHandlers);
+      renderGitHubBoard(el.githubBoardContainer, { configured: false, projectId: null, authStatus }, githubBoardHandlers);
       return;
     }
 
@@ -990,9 +999,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const boardData = await apiService.getGitHubBoard(projectId);
-      const authStatus = await apiService.getGitHubStatus();
       renderGitHubBoard(el.githubBoardContainer, { ...boardData, authStatus, projectId }, githubBoardHandlers);
     } catch (err) {
+      const isAuth = !!(authStatus && authStatus.connected);
       el.githubBoardContainer.innerHTML = `
         <div class="empty-state" style="max-width:540px;margin:40px auto;text-align:center;">
           <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 28px 24px;">
@@ -1000,7 +1009,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <h3 style="color:var(--accent-red);margin-bottom:8px;font-weight:700;">GitHub Board Notice</h3>
             <p style="margin-bottom:20px;color:var(--text-main);word-break:break-word;font-size:0.9rem;line-height:1.5;">${escapeHtml(err.message)}</p>
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-              <button class="btn btn-primary btn-sm" id="btn-edit-gh-link">
+              ${!isAuth ? `
+                <button class="btn btn-primary btn-sm" id="btn-gh-error-login">
+                  <i data-lucide="github"></i> Login with GitHub
+                </button>
+              ` : ''}
+              <button class="btn btn-secondary btn-sm" id="btn-edit-gh-link">
                 <i data-lucide="link"></i> Edit Link
               </button>
               <button class="btn btn-secondary btn-sm" id="btn-retry-gh-board">
@@ -1010,6 +1024,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       `;
+      const btnErrorLogin = el.githubBoardContainer.querySelector('#btn-gh-error-login');
+      if (btnErrorLogin) btnErrorLogin.addEventListener('click', openGitHubOAuthLogin);
       const btnEdit = el.githubBoardContainer.querySelector('#btn-edit-gh-link');
       if (btnEdit) btnEdit.addEventListener('click', () => openGitHubLinkModal(projectId));
       const btnRetry = el.githubBoardContainer.querySelector('#btn-retry-gh-board');
@@ -1069,6 +1085,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       showToast('OAuth Error: ' + err.message);
+      if (err.message.includes('Client ID') || err.message.includes('not configured')) {
+        modalManager.openModal(document.getElementById('modal-github-guide'));
+      }
+    }
+  }
+
+  async function handleGitHubDisconnect() {
+    if (confirm('Are you sure you want to disconnect your GitHub account?')) {
+      try {
+        await apiService.disconnectGitHub();
+        showToast('GitHub account disconnected');
+        const activeProj = store.getState().activeProject;
+        loadGitHubBoard(activeProj);
+      } catch (err) {
+        showToast('Error disconnecting: ' + err.message);
+      }
     }
   }
 

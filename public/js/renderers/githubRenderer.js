@@ -3,7 +3,9 @@ import { escapeHtml } from '../ui/toast.js';
 export function renderGitHubBoard(container, data, handlers = {}) {
   if (!container) return;
 
-  const { onConnectRepo, onOAuthLogin, onRefresh, onCreateIssue, onImportTask, onOpenGuide } = handlers;
+  const { onConnectRepo, onOAuthLogin, onDisconnect, onRefresh, onCreateIssue, onImportTask, onOpenGuide } = handlers;
+  const authStatus = (data && data.authStatus) || {};
+  const isAuth = !!(authStatus.connected && authStatus.user);
 
   // Case 1: No specific project selected
   if (!data || !data.projectId) {
@@ -12,11 +14,32 @@ export function renderGitHubBoard(container, data, handlers = {}) {
         <i data-lucide="github" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:12px;"></i>
         <h3>Select a Project</h3>
         <p>Please select a specific project from the sidebar to view or connect its GitHub Board.</p>
-        <button class="btn btn-secondary btn-sm" id="btn-gh-open-guide-empty" style="margin-top:12px;">
-          <i data-lucide="help-circle"></i> How to Setup GitHub Integration
-        </button>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+          ${!isAuth ? `
+            <button class="btn btn-primary btn-sm" id="btn-gh-oauth-login-empty">
+              <i data-lucide="github"></i> Login with GitHub
+            </button>
+          ` : `
+            <div class="gh-user-badge" title="Connected as ${escapeHtml(authStatus.user.login)}">
+              <img src="${authStatus.user.avatar_url}" alt="${escapeHtml(authStatus.user.login)}" class="gh-avatar-sm">
+              <span>Connected as ${escapeHtml(authStatus.user.login)}</span>
+              ${onDisconnect ? `
+                <button type="button" class="btn-gh-logout" id="btn-gh-logout-empty" title="Disconnect GitHub Account" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:6px;padding:2px;display:inline-flex;align-items:center;">
+                  <i data-lucide="log-out" style="width:13px;height:13px;"></i>
+                </button>
+              ` : ''}
+            </div>
+          `}
+          <button class="btn btn-secondary btn-sm" id="btn-gh-open-guide-empty">
+            <i data-lucide="help-circle"></i> Setup Guide
+          </button>
+        </div>
       </div>
     `;
+    const btnLogin = container.querySelector('#btn-gh-oauth-login-empty');
+    if (btnLogin && onOAuthLogin) btnLogin.addEventListener('click', onOAuthLogin);
+    const btnLogout = container.querySelector('#btn-gh-logout-empty');
+    if (btnLogout && onDisconnect) btnLogout.addEventListener('click', onDisconnect);
     const btnGuide = container.querySelector('#btn-gh-open-guide-empty');
     if (btnGuide && onOpenGuide) btnGuide.addEventListener('click', onOpenGuide);
     if (window.lucide) window.lucide.createIcons();
@@ -36,6 +59,21 @@ export function renderGitHubBoard(container, data, handlers = {}) {
           <button class="btn btn-primary" id="btn-gh-connect-repo">
             <i data-lucide="link"></i> Link GitHub Repo
           </button>
+          ${!isAuth ? `
+            <button class="btn btn-secondary" id="btn-gh-oauth-login-unconfig">
+              <i data-lucide="github"></i> Login with GitHub
+            </button>
+          ` : `
+            <div class="gh-user-badge" title="Connected as ${escapeHtml(authStatus.user.login)}">
+              <img src="${authStatus.user.avatar_url}" alt="${escapeHtml(authStatus.user.login)}" class="gh-avatar-sm">
+              <span>Connected as ${escapeHtml(authStatus.user.login)}</span>
+              ${onDisconnect ? `
+                <button type="button" class="btn-gh-logout" id="btn-gh-logout-unconfig" title="Disconnect GitHub Account" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:6px;padding:2px;display:inline-flex;align-items:center;">
+                  <i data-lucide="log-out" style="width:13px;height:13px;"></i>
+                </button>
+              ` : ''}
+            </div>
+          `}
           <button class="btn btn-secondary" id="btn-gh-open-guide-unconfig">
             <i data-lucide="help-circle"></i> Setup Guide
           </button>
@@ -47,6 +85,14 @@ export function renderGitHubBoard(container, data, handlers = {}) {
     if (btnConnect && onConnectRepo) {
       btnConnect.addEventListener('click', () => onConnectRepo(data.projectId));
     }
+    const btnLogin = container.querySelector('#btn-gh-oauth-login-unconfig');
+    if (btnLogin && onOAuthLogin) {
+      btnLogin.addEventListener('click', onOAuthLogin);
+    }
+    const btnLogout = container.querySelector('#btn-gh-logout-unconfig');
+    if (btnLogout && onDisconnect) {
+      btnLogout.addEventListener('click', onDisconnect);
+    }
     const btnGuide = container.querySelector('#btn-gh-open-guide-unconfig');
     if (btnGuide && onOpenGuide) {
       btnGuide.addEventListener('click', onOpenGuide);
@@ -57,7 +103,7 @@ export function renderGitHubBoard(container, data, handlers = {}) {
   }
 
   // Case 3: Project configured with GitHub Repository
-  const { repo, issues = [], authStatus = {} } = data;
+  const { repo, issues = [] } = data;
 
   const todoIssues = issues.filter(i => i.status === 'todo');
   const inProgressIssues = issues.filter(i => i.status === 'in_progress');
@@ -75,14 +121,19 @@ export function renderGitHubBoard(container, data, handlers = {}) {
       </div>
 
       <div class="gh-header-actions">
-        ${authStatus.connected && authStatus.user ? `
+        ${isAuth ? `
           <div class="gh-user-badge" title="Connected as ${escapeHtml(authStatus.user.login)}">
             <img src="${authStatus.user.avatar_url}" alt="${escapeHtml(authStatus.user.login)}" class="gh-avatar-sm">
             <span>${escapeHtml(authStatus.user.login)}</span>
+            ${onDisconnect ? `
+              <button type="button" class="btn-gh-logout" id="btn-gh-logout" title="Disconnect GitHub Account" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:6px;padding:2px;display:inline-flex;align-items:center;">
+                <i data-lucide="log-out" style="width:13px;height:13px;"></i>
+              </button>
+            ` : ''}
           </div>
         ` : `
-          <button class="btn btn-secondary btn-sm" id="btn-gh-oauth-login" title="Connect GitHub Account via OAuth">
-            <i data-lucide="github"></i> Connect GitHub Account
+          <button class="btn btn-primary btn-sm" id="btn-gh-oauth-login" title="Login with GitHub via OAuth">
+            <i data-lucide="github"></i> Login with GitHub
           </button>
         `}
 
@@ -103,6 +154,19 @@ export function renderGitHubBoard(container, data, handlers = {}) {
         </button>
       </div>
     </div>
+
+    ${!isAuth ? `
+      <!-- Unauthenticated Notice Banner -->
+      <div class="gh-auth-banner" style="background: rgba(255, 51, 51, 0.08); border: 1px solid rgba(255, 51, 51, 0.25); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-main);">
+          <i data-lucide="shield-alert" style="color: var(--accent-red); width: 18px; height: 18px; flex-shrink: 0;"></i>
+          <span>You are currently not logged in with GitHub. Log in to sync private repositories, create issues, and save your login session automatically.</span>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-gh-banner-login">
+          <i data-lucide="github"></i> Login with GitHub
+        </button>
+      </div>
+    ` : ''}
 
     <!-- Live GitHub Kanban Board -->
     <div class="kanban-board">
@@ -210,6 +274,16 @@ export function renderGitHubBoard(container, data, handlers = {}) {
   const btnOAuth = container.querySelector('#btn-gh-oauth-login');
   if (btnOAuth && onOAuthLogin) {
     btnOAuth.addEventListener('click', onOAuthLogin);
+  }
+
+  const btnBannerOAuth = container.querySelector('#btn-gh-banner-login');
+  if (btnBannerOAuth && onOAuthLogin) {
+    btnBannerOAuth.addEventListener('click', onOAuthLogin);
+  }
+
+  const btnLogout = container.querySelector('#btn-gh-logout');
+  if (btnLogout && onDisconnect) {
+    btnLogout.addEventListener('click', onDisconnect);
   }
 
   const btnRefresh = container.querySelector('#btn-gh-refresh');
