@@ -63,6 +63,11 @@ class GitHubService {
       if (client_id) process.env.GITHUB_CLIENT_ID = client_id;
       if (client_secret) process.env.GITHUB_CLIENT_SECRET = client_secret;
 
+      this.saveSettings({
+        github_client_id: client_id,
+        github_client_secret: client_secret
+      });
+
       return { success: true };
     } catch (err) {
       console.error('Error saving config to .env:', err);
@@ -95,11 +100,12 @@ class GitHubService {
     const settings = this.getSettings();
     const clientId = (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_ID.trim()) || (settings.github_client_id && settings.github_client_id.trim()) || '';
     const clientSecret = (process.env.GITHUB_CLIENT_SECRET && process.env.GITHUB_CLIENT_SECRET.trim()) || (settings.github_client_secret && settings.github_client_secret.trim()) || '';
+    const accessToken = (process.env.GITHUB_ACCESS_TOKEN && process.env.GITHUB_ACCESS_TOKEN.trim()) || settings.github_access_token || null;
 
     return {
       clientId,
       clientSecret,
-      accessToken: process.env.GITHUB_ACCESS_TOKEN || settings.github_access_token || null,
+      accessToken,
       user: settings.github_user || null
     };
   }
